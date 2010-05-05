@@ -1,0 +1,26 @@
+
+projsource=${REPOROOT}/m4-1.4.14
+
+function project_getversion ()
+{
+  cd ${projsource}
+  project_version=v1.4.14
+}
+
+function project_cleansource ()
+{
+  cd ${projsource}
+  # clean up the generated sources
+  # git clean -fxd
+  # autoreconf -vi
+}
+
+# m4 specific:
+# --enable-threads
+projectconfigflags="\
+    --enable-threads"
+
+function project_poststage ()
+{
+ :
+}
