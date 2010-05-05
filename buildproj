@@ -44,7 +44,9 @@ echo Building ${PROJECT} ${project_version}
 
 # Run from clean source tree?
 if [ x"${REBUILD_CLEAN}" = xyes ]; then
-  project_cleansource
+  if [ x"${REBUILD_SOURCECLEAN}" = xyes ]; then
+    project_cleansource
+  fi
   # Clean build directory
   rm -rf ${BUILDDIR}
 fi
