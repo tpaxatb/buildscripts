@@ -2,3 +2,13 @@ These are build scripts for the individal libraries/toolchain.  By default they
 build for linux.  They are dumb.  They could be consolodated but I'm pretty
 lazy.
 
+IMPORTANT INFORMATION
+---------------------
+In order for libtool libraries to build properly on 64bit mingw targets, you
+*MUST* use a recent libtool from the trunk.  Otherwise import libraries aren't
+scanned properly.
+
+In addition, I *strongly* suggest regenerating the library directory configure
+scripts, etc with recent versions of autoconf and automake (2.65 and 1.11.1 are
+pretty decent).  You'll have to do this anyway if you are getting for the
+first time from the source repositories.
