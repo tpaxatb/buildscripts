@@ -1,0 +1,25 @@
+
+projsource=${REPOROOT}/autoconf.git
+
+function project_getversion ()
+{
+  cd ${projsource}
+  project_version=`git describe --tags`
+}
+
+function project_cleansource ()
+{
+  cd ${projsource}
+  # clean up the generated sources
+  git clean -fxd
+  autoreconf -vi
+}
+
+# Autoconf specific:
+# Nothing
+projectconfigflags=""
+
+function project_poststage ()
+{
+ :
+}

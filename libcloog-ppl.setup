@@ -1,0 +1,37 @@
+
+projsource=${REPOROOT}/cloog-ppl.git
+project_shared_libs_only=yes
+
+function project_getversion ()
+{
+  cd ${projsource}
+  project_version=`git describe --tags`
+}
+
+function project_cleansource ()
+{
+  cd ${projsource}
+  # clean up the generated sources
+  git clean -fxd
+  # run autoreconf
+  sh ./autogen.sh
+}
+
+
+# CLOOG Specific: find gmp and ppl libs
+projectconfigflags="\
+    --with-gmp=${EXECPREFIX} \
+    --with-ppl=${EXECPREFIX}"
+
+# Need to configure with LDFLAGS=-no-undefined
+case ${HOST_ARCH} in
+  *-mingw*)
+     projectconfigflags="${projectconfigflags} \
+          LDFLAGS=-no-undefined"
+  ;;
+esac
+
+function project_poststage ()
+{
+ :
+}

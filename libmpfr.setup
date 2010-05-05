@@ -1,0 +1,42 @@
+
+projsource=${REPOROOT}/mpfr-svn.git
+project_shared_libs_only=yes
+
+function project_getversion ()
+{
+  cd ${projsource}
+  # limit the logs to 100 (don't have *that* many patches)
+  xxxlogentry=`git log | grep svn-id | head -1`
+  # I use git svn to get the mpfr library on the tree
+  xxxrevision=`echo ${xxxlogentry} | awk '/git-svn-id:/ { print $2 }' | sed 's|.*@||'`
+  xxxbranch=`echo ${xxxlogentry} | sed -ne "/git-svn-id:/ {
+s,.*/trunk,trunk,
+s,.*/branches/,,
+s,.*/tags/,,
+p
+}" | sed 's,@.*,,'`
+
+  project_version=svn-${xxxbranch}-r${xxxrevision}
+}
+
+function project_cleansource ()
+{
+  cd ${projsource}
+  # clean up the generated sources
+  git clean -fxd
+  # run autoreconf
+  autoreconf -vi
+}
+
+# MPFR Specific: 
+#   with-gmp=execprefix (where gmp is installed)
+#   enable-thread-safe (what it sounds like)
+projectconfigflags="\
+    --with-gmp=${EXECPREFIX} \
+    --enable-thred-safe"
+
+# Do nothing
+function project_poststage ()
+{
+ :
+}

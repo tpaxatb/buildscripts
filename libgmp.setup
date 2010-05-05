@@ -1,0 +1,40 @@
+
+projsource=${REPOROOT}/gmplib.hg
+project_shared_libs_only=yes
+
+# CC_FOR_BUILD *must* be set - bug in gmp configure where it grabs
+# the cross compiler instead of the build compiler
+if [ -z "$CC_FOR_BUILD" ]; then
+  echo "You need to set the CC_FOR_BUILD environment due to a bug"
+  echo "in the GMP library compiler (e.g. CC_FOR_BUILD=gcc)"
+  exit 1
+fi
+
+function project_getversion ()
+{
+  cd ${projsource}
+  project_version=v5.0-`hg log -r tip --template "{rev}"`
+}
+
+function project_cleansource ()
+{
+  cd ${projsource}
+  # reset the head to the trunk (how in mercurial???
+  autoreconf -vi
+  # Use the latest version of config...(TODO: FIX THIS)
+  cp /opt/devtools/share/automake-1.11*/config.sub configfsf.sub
+  cp /opt/devtools/share/automake-1.11*/config.guess configfsf.guess
+}
+
+# GMP Specific:
+#   enable-maintainer-mode (needed to generate info in hg repo)
+#   enable-cxx - need C++ interface
+projectconfigflags="\
+    --enable-maintainer-mode \
+    --enable-cxx"
+
+# Does nothing
+function project_poststage ()
+{
+  :
+}

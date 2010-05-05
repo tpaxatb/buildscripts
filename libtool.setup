@@ -1,0 +1,26 @@
+
+projsource=${REPOROOT}/libtool.git
+
+function project_getversion ()
+{
+  cd ${projsource}
+  project_version=`git describe --tags`
+}
+
+function project_cleansource ()
+{
+  cd ${projsource}
+  # clean up the generated sources
+  git clean -fxd
+  # libtool uses a bootstrap script
+  sh ./bootstrap
+}
+
+# Libtool specific:
+# Nothing
+projectconfigflags=""
+
+function project_poststage ()
+{
+ :
+}

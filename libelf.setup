@@ -1,0 +1,25 @@
+
+projsource=${REPOROOT}/libelf-0.8.13
+# Only build static libs
+project_static_libs_only=yes
+# STUPID, doesn't follow convention.
+installmakeflags=instroot=${STAGEDIR}
+
+function project_getversion ()
+{
+  project_version=v0.8.13
+}
+
+# libelf do nothing
+function project_cleansource ()
+{
+ :
+}
+
+# No project specific flags here
+projectconfigflags=""
+
+function project_poststage ()
+{
+ :
+}

@@ -1,0 +1,39 @@
+
+projsource=${REPOROOT}/automake.git
+
+function project_getversion ()
+{
+  cd ${projsource}
+  project_version=`git describe --tags`
+}
+
+function project_cleansource ()
+{
+  cd ${projsource}
+  # clean up the generated sources
+  git clean -fxd
+  # Automake uses a bootstrap script
+  sh ./bootstrap
+}
+
+# Autoconf specific:
+# Nothing
+projectconfigflags=""
+
+function project_poststage ()
+{
+  # If we aren't installing into /usr/share, then we
+  # need to output a dirlist into the staging verison
+  # because the local version doesn't automatically
+  # scan /usr/share (which is where most distros put
+  # m4 files)
+  # TODO: Figure a better way of ensuring that the
+  # directory into which we are installing is right
+  # so if datarootdir is overriden we can put it right.
+  # Right now, this assumes that /usr/share/aclocal
+  # is it, *AND* it assumes dataroot is ${PREFIX}/share
+  if [ ! -d ${STAGEDIR}/usr/share/aclocal ]; then
+     mkdir -p ${STAGEDIR}${PREFIX}/share/aclocal
+     echo /usr/share/aclocal > ${STAGEDIR}${PREFIX}/share/aclocal/dirlist
+  fi
+}

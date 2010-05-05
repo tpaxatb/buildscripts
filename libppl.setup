@@ -1,0 +1,44 @@
+
+projsource=${REPOROOT}/ppl.git
+project_shared_libs_only=yes
+
+function project_getversion ()
+{
+  cd ${projsource}
+  project_version=`git describe --tags`
+}
+
+function project_cleansource ()
+{
+  cd ${projsource}
+  # clean up the generated sources
+  git clean -fxd
+  # run autoreconf
+  autoreconf -vi
+}
+
+# PPL Sepecific:
+#   enable-optimization=speed (want fast library)
+#   enable-watchdog=no (no need for pwl library)
+#   with-gmp-prefix=execprefix (where gmp is installed)
+#   The ppl configuration (of course) doesn't use the
+#   directory passed to gmp-prefix so need to pass
+#   CPPFLAGS and LDFLAGS
+projectconfigflags="\
+    --enable-optimization=speed \
+    --enable-watchdog=no \
+    --with-gmp-prefix=${EXECPREFIX} \
+    CPPFLAGS=-I${EXECPREFIX}/include \
+    LDFLAGS=-L${EXECPREFIX}/lib"
+
+function project_poststage ()
+{
+  cd ${STAGEDIR}${PREFIX}
+  # The PPL documentation is built regardless during install phase - consolodate it.
+  if [ -d share/doc/ppl ]; then
+    (cd share/doc/ppl && rm -rf *-html *.ps.gz && bzip2 *.pdf)
+  fi
+  if [ -d share/doc/pwl ]; then
+    (cd share/doc/pwl && rm -rf *-html *.ps.gz && bzip2 *.pdf)
+  fi
+}
