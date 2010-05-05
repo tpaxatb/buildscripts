@@ -1,0 +1,4 @@
+These are build scripts for the individal libraries/toolchain.  By default they
+build for linux.  They are dumb.  They could be consolodated but I'm pretty
+lazy.
+
