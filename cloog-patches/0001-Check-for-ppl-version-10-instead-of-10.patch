@@ -1,0 +1,39 @@
+From 0c85db6ee2e8dcf12ba14639d5701253ff94b4ca Mon Sep 17 00:00:00 2001
+From: Doug Semler <dougsemler@gmail.com>
+Date: Wed, 5 May 2010 14:16:00 -0400
+Subject: [PATCH] Check for ppl version >= 10 instead of == 10
+
+---
+ configure    |    2 +-
+ configure.in |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/configure b/configure
+index 461b3f6..1089eaa 100755
+--- a/configure
++++ b/configure
+@@ -12863,7 +12863,7 @@ int
+ main ()
+ {
+ 
+-	#if PPL_VERSION_MAJOR != $ppl_major_version || PPL_VERSION_MINOR != $ppl_minor_version
++	#if PPL_VERSION_MAJOR != $ppl_major_version || PPL_VERSION_MINOR < $ppl_minor_version
+ 	choke me
+ 	#endif
+ 
+diff --git a/configure.in b/configure.in
+index ecfc738..1fb195a 100644
+--- a/configure.in
++++ b/configure.in
+@@ -340,7 +340,7 @@ if test "x$with_ppl" != "x" -a "x$with_ppl" != "xno"; then
+ 
+ 	AC_MSG_CHECKING([for version $ppl_major_version.$ppl_minor_version of PPL])
+ 	AC_TRY_COMPILE([#include "ppl_c.h"],[
+-	#if PPL_VERSION_MAJOR != $ppl_major_version || PPL_VERSION_MINOR != $ppl_minor_version
++	#if PPL_VERSION_MAJOR != $ppl_major_version || PPL_VERSION_MINOR < $ppl_minor_version
+ 	choke me
+ 	#endif
+ 	], [AC_MSG_RESULT([yes])], [AC_MSG_ERROR(Can't find correct version of PPL.) ])
+-- 
+1.7.0.3.254.g4503b
+
