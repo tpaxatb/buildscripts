@@ -4,6 +4,13 @@ set -e
 absdir="$(cd "${0%/*}" 2>/dev/null; echo "$PWD")"
 abspath="${absdir}/"${0##*/}""
 
+for option in $*; do
+  a=`expr "$option" : '[^=]*=\(.*\)'`
+  b=`expr "$option" : '\([^=]*\)=.*'`
+  declare ${b}=${a}
+done
+
+
 if [ -z "${PROJECT}" ]; then
   echo "I need a project to build!"
   exit 1
