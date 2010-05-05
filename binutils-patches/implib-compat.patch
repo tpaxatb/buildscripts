@@ -1,0 +1,311 @@
+From ff1e8c05d51cbd238efbe01fc90da61d3dd7c097 Mon Sep 17 00:00:00 2001
+From: Doug Semler <dougsemler@gmail.com>
+Date: Wed, 14 Apr 2010 09:24:57 -0400
+Subject: [PATCH 2/3] Default import libraries to be compatible with the MS linker, and
+ create a parameter to allow the original behavior.
+
+ld/ChangeLog:
+
+	* pe-dll.h (pe_mslink_compatible_implib): Declare new global.
+	* pep-dll.h (pep_mslink_compatible_implib): Declare new global.
+	* pep-dll.c: Define to use during PE+ object build.
+	* pe-dll.c (pe_mslink_compatible_implib): Define.
+	  (make_head): Add new parameter to indicate whether function
+	    is being called when making import library.
+	    When making compatible import library, use the dll name
+	    instead of unique name.
+	  (make_one): Likewise.
+	  (make_tail): Likewise.
+	  (pe_dll_generate_implib): Indicate that an import library
+	    is being generated.
+	  (pe_process_import_defs): Indicate that an import library
+	    is not being generated.
+	* emultempl/pe.em: Add parameter --incompatible-mslink-implib
+	* emultempl/pep.em: Likewise.
+---
+ ld/emultempl/pe.em  |   11 ++++++++-
+ ld/emultempl/pep.em |    8 ++++++
+ ld/pe-dll.c         |   65 ++++++++++++++++++++++++++++++++++++--------------
+ ld/pe-dll.h         |    1 +
+ ld/pep-dll.c        |    2 +
+ ld/pep-dll.h        |    1 +
+ 6 files changed, 69 insertions(+), 19 deletions(-)
+
+diff --git a/ld/emultempl/pe.em b/ld/emultempl/pe.em
+index ec893b9..5df3ee7 100644
+--- a/ld/emultempl/pe.em
++++ b/ld/emultempl/pe.em
+@@ -197,7 +197,9 @@ fragment <<EOF
+ #define OPTION_ENABLE_STDCALL_FIXUP	(OPTION_STDCALL_ALIASES + 1)
+ #define OPTION_DISABLE_STDCALL_FIXUP	(OPTION_ENABLE_STDCALL_FIXUP + 1)
+ #define OPTION_IMPLIB_FILENAME		(OPTION_DISABLE_STDCALL_FIXUP + 1)
+-#define OPTION_THUMB_ENTRY		(OPTION_IMPLIB_FILENAME + 1)
++#define OPTION_INCOMPATIBLE_MSLINK_IMPLIB \
++					(OPTION_IMPLIB_FILENAME + 1)
++#define OPTION_THUMB_ENTRY		(OPTION_INCOMPATIBLE_MSLINK_IMPLIB + 1)
+ #define OPTION_WARN_DUPLICATE_EXPORTS	(OPTION_THUMB_ENTRY + 1)
+ #define OPTION_IMP_COMPAT		(OPTION_WARN_DUPLICATE_EXPORTS + 1)
+ #define OPTION_ENABLE_AUTO_IMAGE_BASE	(OPTION_IMP_COMPAT + 1)
+@@ -286,6 +288,7 @@ gld${EMULATION_NAME}_add_options
+     {"enable-stdcall-fixup", no_argument, NULL, OPTION_ENABLE_STDCALL_FIXUP},
+     {"disable-stdcall-fixup", no_argument, NULL, OPTION_DISABLE_STDCALL_FIXUP},
+     {"out-implib", required_argument, NULL, OPTION_IMPLIB_FILENAME},
++    {"incompatible-mslink-implib", no_argument, NULL, OPTION_INCOMPATIBLE_MSLINK_IMPLIB},
+     {"warn-duplicate-exports", no_argument, NULL, OPTION_WARN_DUPLICATE_EXPORTS},
+     /* getopt() allows abbreviations, so we do this to stop it from
+        treating -c as an abbreviation for these --compat-implib.  */
+@@ -422,6 +425,9 @@ gld_${EMULATION_NAME}_list_options (FILE *file)
+   fprintf (file, _("  --out-implib <file>                Generate import library\n"));
+   fprintf (file, _("  --output-def <file>                Generate a .DEF file for the built DLL\n"));
+   fprintf (file, _("  --warn-duplicate-exports           Warn about duplicate exports.\n"));
++  fprintf (file, _("  --incompatible-mslink-implib       When generating an import library, create\n\
++                                       one that is not consumable by the native\n\
++                                       linker (original behavior).\n"));
+   fprintf (file, _("  --compat-implib                    Create backward compatible import libs;\n\
+                                        create __imp_<SYMBOL> as well.\n"));
+   fprintf (file, _("  --enable-auto-image-base           Automatically choose image base for DLLs\n\
+@@ -770,6 +776,9 @@ gld${EMULATION_NAME}_handle_option (int optc)
+     case OPTION_IMPLIB_FILENAME:
+       pe_implib_filename = xstrdup (optarg);
+       break;
++    case OPTION_INCOMPATIBLE_MSLINK_IMPLIB:
++      pe_mslink_compatible_implib = 0;
++      break;
+     case OPTION_WARN_DUPLICATE_EXPORTS:
+       pe_dll_warn_dup_exports = 1;
+       break;
+diff --git a/ld/emultempl/pep.em b/ld/emultempl/pep.em
+index a315fd6..7e4c75b 100644
+--- a/ld/emultempl/pep.em
++++ b/ld/emultempl/pep.em
+@@ -157,6 +157,7 @@ enum options
+   OPTION_ENABLE_STDCALL_FIXUP,
+   OPTION_DISABLE_STDCALL_FIXUP,
+   OPTION_IMPLIB_FILENAME,
++  OPTION_INCOMPATIBLE_MSLINK_IMPLIB,
+   OPTION_WARN_DUPLICATE_EXPORTS,
+   OPTION_IMP_COMPAT,
+   OPTION_ENABLE_AUTO_IMAGE_BASE,
+@@ -233,6 +234,7 @@ gld${EMULATION_NAME}_add_options
+     {"enable-stdcall-fixup", no_argument, NULL, OPTION_ENABLE_STDCALL_FIXUP},
+     {"disable-stdcall-fixup", no_argument, NULL, OPTION_DISABLE_STDCALL_FIXUP},
+     {"out-implib", required_argument, NULL, OPTION_IMPLIB_FILENAME},
++    {"incompatible-mslink-implib", no_argument, NULL, OPTION_INCOMPATIBLE_MSLINK_IMPLIB},
+     {"warn-duplicate-exports", no_argument, NULL, OPTION_WARN_DUPLICATE_EXPORTS},
+     /* getopt() allows abbreviations, so we do this to stop it from
+        treating -c as an abbreviation for these --compat-implib.  */
+@@ -359,6 +361,9 @@ gld_${EMULATION_NAME}_list_options (FILE *file)
+   fprintf (file, _("  --export-all-symbols               Automatically export all globals to DLL\n"));
+   fprintf (file, _("  --kill-at                          Remove @nn from exported symbols\n"));
+   fprintf (file, _("  --out-implib <file>                Generate import library\n"));
++  fprintf (file, _("  --incompatible-mslink-implib       When generating an import library, create\n\
++                                       one that is not consumable by the native\n\
++                                       linker (original behavior).\n"));
+   fprintf (file, _("  --output-def <file>                Generate a .DEF file for the built DLL\n"));
+   fprintf (file, _("  --warn-duplicate-exports           Warn about duplicate exports.\n"));
+   fprintf (file, _("  --compat-implib                    Create backward compatible import libs;\n\
+@@ -699,6 +704,9 @@ gld${EMULATION_NAME}_handle_option (int optc)
+     case OPTION_IMPLIB_FILENAME:
+       pep_implib_filename = xstrdup (optarg);
+       break;
++    case OPTION_INCOMPATIBLE_MSLINK_IMPLIB:
++      pep_mslink_compatible_implib = 0;
++      break;
+     case OPTION_WARN_DUPLICATE_EXPORTS:
+       pep_dll_warn_dup_exports = 1;
+       break;
+diff --git a/ld/pe-dll.c b/ld/pe-dll.c
+index 8b9d5b4..8a061fb 100644
+--- a/ld/pe-dll.c
++++ b/ld/pe-dll.c
+@@ -154,6 +154,7 @@ int pe_dll_do_default_excludes = 1;
+ int pe_dll_kill_ats = 0;
+ int pe_dll_stdcall_aliases = 0;
+ int pe_dll_warn_dup_exports = 0;
++int pe_mslink_compatible_implib = 1;
+ int pe_dll_compat_implib = 0;
+ int pe_dll_extra_pe_debug = 0;
+ int pe_use_nul_prefixed_import_tables = 0;
+@@ -1844,16 +1845,24 @@ save_relocs (asection *sec)
+    hname:                              */
+ 
+ static bfd *
+-make_head (bfd *parent)
++make_head (bfd *parent, bfd_boolean making_implib)
+ {
+   asection *id2, *id5, *id4;
+   unsigned char *d2, *d5, *d4;
+   char *oname;
+   bfd *abfd;
+ 
+-  oname = xmalloc (20);
+-  sprintf (oname, "d%06d.o", tmp_seq);
+-  tmp_seq++;
++  if (making_implib && pe_mslink_compatible_implib)
++    {
++      oname = xmalloc (strlen (dll_filename) + 1);
++      sprintf (oname, dll_filename);
++    }
++  else
++    {
++      oname = xmalloc (20);
++      sprintf (oname, "d%06d.o", tmp_seq);
++      tmp_seq++;
++    }
+ 
+   abfd = bfd_create (oname, parent);
+   bfd_find_target (pe_details->object_target, abfd);
+@@ -1932,7 +1941,7 @@ make_head (bfd *parent)
+  	.asciz		"my.dll"       */
+ 
+ static bfd *
+-make_tail (bfd *parent)
++make_tail (bfd *parent, bfd_boolean making_implib)
+ {
+   asection *id4, *id5, *id7;
+   unsigned char *d4, *d5, *d7;
+@@ -1940,9 +1949,17 @@ make_tail (bfd *parent)
+   char *oname;
+   bfd *abfd;
+ 
+-  oname = xmalloc (20);
+-  sprintf (oname, "d%06d.o", tmp_seq);
+-  tmp_seq++;
++  if (making_implib && pe_mslink_compatible_implib)
++    {
++      oname = xmalloc (strlen (dll_filename) + 1);
++      sprintf (oname, dll_filename);
++    }
++  else
++    {
++      oname = xmalloc (20);
++      sprintf (oname, "d%06d.o", tmp_seq);
++      tmp_seq++;
++    }
+ 
+   abfd = bfd_create (oname, parent);
+   bfd_find_target (pe_details->object_target, abfd);
+@@ -2049,7 +2066,10 @@ static const unsigned char jmp_arm_bytes[] =
+ 
+ 
+ static bfd *
+-make_one (def_file_export *exp, bfd *parent, bfd_boolean include_jmp_stub)
++make_one (def_file_export *exp,
++          bfd *parent,
++          bfd_boolean include_jmp_stub,
++          bfd_boolean making_implib)
+ {
+   asection *tx, *id7, *id5, *id4, *id6;
+   unsigned char *td = NULL, *d7, *d5, *d4, *d6 = NULL;
+@@ -2092,9 +2112,17 @@ make_one (def_file_export *exp, bfd *parent, bfd_boolean include_jmp_stub)
+ 	}
+     }
+ 
+-  oname = xmalloc (20);
+-  sprintf (oname, "d%06d.o", tmp_seq);
+-  tmp_seq++;
++  if (making_implib && pe_mslink_compatible_implib)
++    {
++      oname = xmalloc (strlen (dll_filename) + 1);
++      sprintf (oname, dll_filename);
++    }
++  else
++    {
++      oname = xmalloc (20);
++      sprintf (oname, "d%06d.o", tmp_seq);
++      tmp_seq++;
++    }
+ 
+   abfd = bfd_create (oname, parent);
+   bfd_find_target (pe_details->object_target, abfd);
+@@ -2694,7 +2722,7 @@ pe_dll_generate_implib (def_file *def, const char *impfilename, struct bfd_link_
+   outarch->has_armap = 1;
+ 
+   /* Work out a reasonable size of things to put onto one line.  */
+-  ar_head = make_head (outarch);
++  ar_head = make_head (outarch, TRUE);
+ 
+   /* Iterate the input BFDs, looking for exclude-modules-for-implib.  */
+   for (ibfd = info->input_bfds; ibfd; ibfd = ibfd->link_next)
+@@ -2762,13 +2790,13 @@ pe_dll_generate_implib (def_file *def, const char *impfilename, struct bfd_link_
+ 	continue;
+       def->exports[i].internal_name = def->exports[i].name;
+       n = make_one (def->exports + i, outarch,
+-		    ! (def->exports + i)->flag_data);
++		    ! (def->exports + i)->flag_data, TRUE);
+       n->archive_next = head;
+       head = n;
+       def->exports[i].internal_name = internal;
+     }
+ 
+-  ar_tail = make_tail (outarch);
++  ar_tail = make_tail (outarch, TRUE);
+ 
+   if (ar_head == NULL || ar_tail == NULL)
+     return;
+@@ -2918,7 +2946,7 @@ pe_process_import_defs (bfd *output_bfd, struct bfd_link_info *linfo)
+ 		/* We do.  */
+ 		if (!do_this_dll)
+ 		  {
+-		    bfd *ar_head = make_head (output_bfd);
++		    bfd *ar_head = make_head (output_bfd, FALSE);
+ 		    add_bfd_to_link (ar_head, ar_head->filename, linfo);
+ 		    do_this_dll = 1;
+ 		  }
+@@ -2931,13 +2959,14 @@ pe_process_import_defs (bfd *output_bfd, struct bfd_link_info *linfo)
+ 		exp.flag_constant = 0;
+ 		exp.flag_data = pe_def_file->imports[i].data;
+ 		exp.flag_noname = exp.name ? 0 : 1;
+-		one = make_one (&exp, output_bfd, (! exp.flag_data) && include_jmp_stub);
++		one = make_one (&exp, output_bfd,
++                                (! exp.flag_data) && include_jmp_stub, FALSE);
+ 		add_bfd_to_link (one, one->filename, linfo);
+ 	      }
+ 	  }
+       if (do_this_dll)
+ 	{
+-	  bfd *ar_tail = make_tail (output_bfd);
++	  bfd *ar_tail = make_tail (output_bfd, FALSE);
+ 	  add_bfd_to_link (ar_tail, ar_tail->filename, linfo);
+ 	}
+ 
+diff --git a/ld/pe-dll.h b/ld/pe-dll.h
+index 4697390..3e5fbab 100644
+--- a/ld/pe-dll.h
++++ b/ld/pe-dll.h
+@@ -34,6 +34,7 @@ extern int pe_dll_do_default_excludes;
+ extern int pe_dll_kill_ats;
+ extern int pe_dll_stdcall_aliases;
+ extern int pe_dll_warn_dup_exports;
++extern int pe_mslink_compatible_implib;
+ extern int pe_dll_compat_implib;
+ extern int pe_dll_extra_pe_debug;
+ extern int pe_use_nul_prefixed_import_tables;
+diff --git a/ld/pep-dll.c b/ld/pep-dll.c
+index 0e5e8b1..0b30040 100644
+--- a/ld/pep-dll.c
++++ b/ld/pep-dll.c
+@@ -26,6 +26,8 @@
+ /* Local defined globals.  */
+ #define pe_def_file	            pep_def_file
+ #define pe_details	            pep_details
++#define pe_mslink_compatible_implib \
++				    pep_mslink_compatible_implib
+ #define pe_dll_compat_implib        pep_dll_compat_implib
+ #define pe_dll_extra_pe_debug       pep_dll_extra_pe_debug
+ #define pe_dll_export_everything    pep_dll_export_everything
+diff --git a/ld/pep-dll.h b/ld/pep-dll.h
+index 1e7e3d6..d4a4c8b 100644
+--- a/ld/pep-dll.h
++++ b/ld/pep-dll.h
+@@ -34,6 +34,7 @@ extern int pep_dll_do_default_excludes;
+ extern int pep_dll_kill_ats;
+ extern int pep_dll_stdcall_aliases;
+ extern int pep_dll_warn_dup_exports;
++extern int pep_mslink_compatible_implib;
+ extern int pep_dll_compat_implib;
+ extern int pep_dll_extra_pe_debug;
+ extern int pep_use_nul_prefixed_import_tables;
+-- 
+1.7.0.3.254.g4503b
+
