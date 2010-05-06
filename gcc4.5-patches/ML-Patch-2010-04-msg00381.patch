@@ -1,0 +1,45 @@
+From 7d4c582f5bcf4e2bb7907e1ccb23cbee8ac4e2c4 Mon Sep 17 00:00:00 2001
+From: Ozkan Sezer <sezeroz@gmail.com>
+Date: Tue, 4 May 2010 09:27:52 -0400
+Subject: [PATCH 6/8] Patch http://gcc.gnu.org/ml/gcc-patches/2010-04/msg00381.html
+
+gcc/ada/gsocket.h includes windows.h before winsock2.h which leads to
+clashing definitions with winsock.h included from within windows.h, at
+least for mingw-w64. It is common practice to include winsock2.h before
+windows.h, because winsock2.h always includes windows.h itself. The
+trivial patch below fixes that. Please consider for applying to any
+active branch if possible.
+
+gcc/ada/ChangeLog:
+
+2010-04-08  Ozkan Sezer  <sezeroz@gmail.com>
+
+	* gsocket.h: Make sure that winsock2.h is included before windows.h
+---
+ gcc/ada/gsocket.h |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/gcc/ada/gsocket.h b/gcc/ada/gsocket.h
+index 24928a1..5fe122c 100644
+--- a/gcc/ada/gsocket.h
++++ b/gcc/ada/gsocket.h
+@@ -71,7 +71,6 @@
+ 
+ #elif defined (WINNT)
+ #define FD_SETSIZE 1024
+-#include <windows.h>
+ 
+ #ifdef __MINGW32__
+ #include <winsock2.h>
+@@ -160,6 +159,8 @@
+ 
+ #endif
+ 
++#include <windows.h>
++
+ #elif defined(VMS)
+ #define FD_SETSIZE 4096
+ #ifndef IN_RTS
+-- 
+1.7.0.3.254.g4503b
+

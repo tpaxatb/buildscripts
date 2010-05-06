@@ -1,0 +1,43 @@
+From 519acf05a81c38d31d63b10eedc2fe15da1b2204 Mon Sep 17 00:00:00 2001
+From: Doug Semler <dougsemler@gmail.com>
+Date: Tue, 4 May 2010 09:25:25 -0400
+Subject: [PATCH 2/8] Fix PR/36328 system headers not found if exec_prefix != prefix
+
+gcc/ChangeLog:
+	* configure.ac: Add prefix_to_exec_prefix to gcc_tooldir
+	  definition.
+	* configure: Regenerate.
+---
+ gcc/configure    |    2 +-
+ gcc/configure.ac |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gcc/configure b/gcc/configure
+index 29ec1d3..cb1f0b6 100755
+--- a/gcc/configure
++++ b/gcc/configure
+@@ -25078,7 +25078,7 @@ if test "x$subdirs" != x; then
+ fi
+ echo "source ${srcdir}/gdbinit.in" >> .gdbinit
+ 
+-gcc_tooldir='$(libsubdir)/$(libsubdir_to_prefix)$(target_noncanonical)'
++gcc_tooldir='$(libsubdir)/$(libsubdir_to_prefix)$(prefix_to_exec_prefix)$(target_noncanonical)'
+ 
+ 
+ 
+diff --git a/gcc/configure.ac b/gcc/configure.ac
+index df244b9..fd32832 100644
+--- a/gcc/configure.ac
++++ b/gcc/configure.ac
+@@ -4303,7 +4303,7 @@ if test "x$subdirs" != x; then
+ fi
+ echo "source ${srcdir}/gdbinit.in" >> .gdbinit
+ 
+-gcc_tooldir='$(libsubdir)/$(libsubdir_to_prefix)$(target_noncanonical)'
++gcc_tooldir='$(libsubdir)/$(libsubdir_to_prefix)$(prefix_to_exec_prefix)$(target_noncanonical)'
+ AC_SUBST(gcc_tooldir)
+ AC_SUBST(dollar)
+ 
+-- 
+1.7.0.3.254.g4503b
+

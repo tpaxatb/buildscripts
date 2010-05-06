@@ -1,0 +1,35 @@
+From 0bf9d4a9a9326fc80b8415fee0f14751edf188b4 Mon Sep 17 00:00:00 2001
+From: Doug Semler <dougsemler@gmail.com>
+Date: Tue, 4 May 2010 09:27:03 -0400
+Subject: [PATCH 4/8] Fix PR/43731 - Mulitlib ada broken on i686-w64-mingw32 builds.
+
+gcc/ada/ChangeLog:
+	* Makefile.in: Add logic for multilib on 32 bit mingw-w64
+	  builds.
+---
+ gcc/ada/gcc-interface/Makefile.in |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/gcc/ada/gcc-interface/Makefile.in b/gcc/ada/gcc-interface/Makefile.in
+index 8f7f4fd..e3506b4 100644
+--- a/gcc/ada/gcc-interface/Makefile.in
++++ b/gcc/ada/gcc-interface/Makefile.in
+@@ -1649,8 +1649,13 @@ ifeq ($(strip $(filter-out cygwin32% mingw32% pe,$(osys))),)
+       LIBGNAT_TARGET_PAIRS += \
+         system.ads<system-mingw-x86_64.ads
+     else
+-      LIBGNAT_TARGET_PAIRS += \
+-        system.ads<system-mingw.ads
++      ifeq ($(strip $(MULTISUBDIR)),/64)
++        LIBGNAT_TARGET_PAIRS += \
++          system.ads<system-mingw-x86_64.ads
++      else
++        LIBGNAT_TARGET_PAIRS += \
++          system.ads<system-mingw.ads
++      endif
+     endif
+ 
+     EXTRA_GNATRTL_NONTASKING_OBJS = \
+-- 
+1.7.0.3.254.g4503b
+

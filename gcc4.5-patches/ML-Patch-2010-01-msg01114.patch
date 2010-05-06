@@ -1,0 +1,72 @@
+From 6a0f6d2e0894a328a6c9b042b63dd8f8100f7dc1 Mon Sep 17 00:00:00 2001
+From: Ozkan Sezer <sezeroz@gmail.com>
+Date: Tue, 4 May 2010 09:48:07 -0400
+Subject: [PATCH 7/8] Patch http://gcc.gnu.org/ml/gcc-patches/2010-01/msg01114.html
+
+Fix the header includes of the system headers.
+
+gcc/ChangeLog:
+
+2010-01-20  Kai Tietz  <ktietz70@googlemail.com>
+	    Ozkan Sezer  <sezeroz@gmail.com>
+
+	* ginclude/float.h: include_next float.h for mingw-w64.
+	* ginclude/stdarg.h: include_next stdarg.h for mingw-w64.
+	* ginclude/stddef.h: include_next stddef.h for mingw-w64.
+---
+ gcc/ginclude/float.h  |    7 +++++++
+ gcc/ginclude/stdarg.h |    7 +++++++
+ gcc/ginclude/stddef.h |    7 +++++++
+ 3 files changed, 21 insertions(+), 0 deletions(-)
+
+diff --git a/gcc/ginclude/float.h b/gcc/ginclude/float.h
+index 9969f1c..541a8c0 100644
+--- a/gcc/ginclude/float.h
++++ b/gcc/ginclude/float.h
+@@ -236,3 +236,10 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ #endif /* __STDC_WANT_DEC_FP__ */
+ 
+ #endif /* _FLOAT_H___ */
++
++#ifdef __MINGW32__
++#include <_mingw.h>
++#ifdef _MINGW64_VERSION_MAJOR
++#include_next <float.h>
++#endif
++#endif
+diff --git a/gcc/ginclude/stdarg.h b/gcc/ginclude/stdarg.h
+index 54dc2e7..7bcb51c 100644
+--- a/gcc/ginclude/stdarg.h
++++ b/gcc/ginclude/stdarg.h
+@@ -128,3 +128,10 @@ typedef __gnuc_va_list va_list;
+ 
+ #endif /* not _ANSI_STDARG_H_ */
+ #endif /* not _STDARG_H */
++
++#ifdef __MINGW32__
++#include <_mingw.h>
++#ifdef _MINGW64_VERSION_MAJOR
++#include_next <stdarg.h>
++#endif
++#endif
+diff --git a/gcc/ginclude/stddef.h b/gcc/ginclude/stddef.h
+index 89e5b2e..e32a565 100644
+--- a/gcc/ginclude/stddef.h
++++ b/gcc/ginclude/stddef.h
+@@ -22,6 +22,13 @@ a copy of the GCC Runtime Library Exception along with this program;
+ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ <http://www.gnu.org/licenses/>.  */
+ 
++#ifdef __MINGW32__
++#include <_mingw.h>
++#ifdef _MINGW64_VERSION_MAJOR
++#include_next <stddef.h>
++#endif
++#endif
++
+ /*
+  * ISO C Standard:  7.17  Common definitions  <stddef.h>
+  */
+-- 
+1.7.0.3.254.g4503b
+

@@ -1,0 +1,31 @@
+From 1bdf88d7035f45cfb198792b6ecb20d7ec96b857 Mon Sep 17 00:00:00 2001
+From: Doug Semler <dougsemler@gmail.com>
+Date: Tue, 4 May 2010 09:31:20 -0400
+Subject: [PATCH 5/8] Fix PR/38493 - Installed ada cannot find libraries.
+
+When exec_prefix != prefix, the installed ada compiler searches
+the incorrect directories at runtime.  This patch fixes that.
+
+gcc/ada/ChangeLog:
+	* Make-generated.in: Search libraries based on exec_prefix
+	  and not prefix.
+---
+ gcc/ada/Make-generated.in |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/gcc/ada/Make-generated.in b/gcc/ada/Make-generated.in
+index 06cb4a2..abc7e90 100644
+--- a/gcc/ada/Make-generated.in
++++ b/gcc/ada/Make-generated.in
+@@ -100,7 +100,7 @@ $(ADA_GEN_SUBDIR)/stamp-sdefault : $(srcdir)/version.c Makefile
+ 	$(ECHO) "pragma Style_Checks (Off);" >tmp-sdefault.adb
+ 	$(ECHO) "with Osint; use Osint;" >>tmp-sdefault.adb
+ 	$(ECHO) "package body Sdefault is" >>tmp-sdefault.adb
+-	$(ECHO) "   S0 : constant String := \"$(prefix)/\";" >>tmp-sdefault.adb
++	$(ECHO) "   S0 : constant String := \"$(exec_prefix)/\";" >>tmp-sdefault.adb
+ 	$(ECHO) "   S1 : constant String := \"$(ADA_INCLUDE_DIR)/\";" >>tmp-sdefault.adb
+ 	$(ECHO) "   S2 : constant String := \"$(ADA_RTL_OBJ_DIR)/\";" >>tmp-sdefault.adb
+ 	$(ECHO) "   S3 : constant String := \"$(target)/\";" >>tmp-sdefault.adb
+-- 
+1.7.0.3.254.g4503b
+

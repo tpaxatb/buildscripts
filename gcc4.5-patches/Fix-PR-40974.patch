@@ -1,0 +1,36 @@
+From 88b7e642f51706804a3614843d63bd965a501b5d Mon Sep 17 00:00:00 2001
+From: Ralf Wildenhues <Ralf.Wildenhues@gmx.de>
+Date: Tue, 4 May 2010 11:46:49 -0400
+Subject: [PATCH 8/8] Fix PR/40974 - Multiple inclusion guard prevents canadian cross
+
+When building precompiled headers, a multiple inclusion guard will
+prevent the system fenv.h from being pulled in correctly.
+
+libstdc++-v3/ChangeLog:
+2009-12-22  Ralf Wildenhues  <Ralf.Wildenhues@gmx.de>
+
+	PR libstdc++/40974
+	* include/c_compatibility/fenv.h (_GLIBCXX_FENV_H):
+	Turn off multiple inclusion guard for 'include_next <fenv.h>'.
+---
+ libstdc++-v3/include/c_compatibility/fenv.h |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/libstdc++-v3/include/c_compatibility/fenv.h b/libstdc++-v3/include/c_compatibility/fenv.h
+index 5db6d9d..ce56a95 100644
+--- a/libstdc++-v3/include/c_compatibility/fenv.h
++++ b/libstdc++-v3/include/c_compatibility/fenv.h
+@@ -33,7 +33,10 @@
+ 
+ #include <bits/c++config.h>
+ #if _GLIBCXX_HAVE_FENV_H
++# undef _GLIBCXX_FENV_H
+ # include_next <fenv.h>
++# undef _GLIBCXX_FENV_H
++# define _GLIBCXX_FENV_H 1
+ #endif
+ 
+ #ifdef __GXX_EXPERIMENTAL_CXX0X__
+-- 
+1.7.0.3.254.g4503b
+
