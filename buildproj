@@ -1,13 +1,30 @@
 #! /bin/bash
 set -e
 
+function dohelp ()
+{
+  echo HELP will go here at some point
+}
+
 absdir="$(cd "${0%/*}" 2>/dev/null; echo "$PWD")"
 abspath="${absdir}/"${0##*/}""
 
 for option in $*; do
-  a=`expr "$option" : '[^=]*=\(.*\)'`
-  b=`expr "$option" : '\([^=]*\)=.*'`
-  declare ${b}=${a}
+  case $option in
+     *=*)
+       a=`expr "$option" : '[^=]*=\(.*\)'`
+       b=`expr "$option" : '\([^=]*\)=.*'`
+       declare ${b}=${a}
+       ;;
+     --help)
+       dohelp
+       exit 0
+       ;;
+     *)
+       echo Unknown argument $option
+       exit 1
+       ;;
+  esac
 done
 
 
@@ -32,10 +49,16 @@ TARDIR=${TARDIR:-${BUILDROOT}/tarballs}
 PREFIX=${PREFIX:-/opt/devtools}
 EXECPREFIX=${EXECPREFIX:-${PREFIX}/${HOST_ARCH}}
 
-# My machine is a core2 which works best with 3 subprocs
-MAKEPARALLELFLAGS=${MAKEPARELLELFLAGS:--j3}
+# My machine is a core2 with only 2 GIG, so 3 subrpocs
+# work best (no swapping)
+MAKEPARALLELFLAGS=${MAKEPARELLELFLAGS:-"-j3"}
 # Project specific settings
-. "${absdir}/${PROJECT}.setup"
+if [ -f "${absdir}/${PROJECT}.setup" ]; then
+  . "${absdir}/${PROJECT}.setup"
+else
+  echo Cannot find setup file "${absdir}/${PROJECT}.setup"
+  exit 1
+fi
 
 # Get the version into project_version
 project_getversion
@@ -91,6 +114,14 @@ fi
 make ${MAKEPARALLELFLAGS} \
   LIBTOOLFLAGS=--quiet \
   ${buildmakeflags}
+
+if [ x"${DOCHECK}" = xyes ]; then
+  make ${MAKEPARALLELFLAGS} \
+    LIBTOOLFLAGS=--quiet \
+    -k \
+    ${buildmakeflags} \
+    ${checktarget}
+fi
 
 # Clean staging directory
 rm -rf ${STAGEDIR}
