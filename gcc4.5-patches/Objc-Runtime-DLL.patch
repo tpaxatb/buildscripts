@@ -1,0 +1,92 @@
+From 9dac07e8a4c2b7d29b6857af52522c82e5475da6 Mon Sep 17 00:00:00 2001
+From: Doug Semler <dougsemler@gmail.com>
+Date: Thu, 6 May 2010 16:57:33 -0400
+Subject: [PATCH] Fix Objective C runtime DLL
+
+The Objective C rutnime DLL was incomplete.  This patch fixes
+it by exporting the correct symbols and linking to the shared
+libgcc runtime library (for exeception handling).
+
+libobc/Changelog:
+
+	* configure.ac: For w64-mingw targets, export the symbols
+	  in libobjc.def and link against the shared libgcc.
+	* configure: Regenerate.
+	* libobjc.def: Remove LIBRARY declaration.  Remove symbols
+	  no longer in library.  Export additional symbols required.
+	  Export the exception personality.
+---
+ libobjc/configure    |    2 +-
+ libobjc/configure.ac |    3 +++
+ libobjc/libobjc.def  |   15 +++++++--------
+ 3 files changed, 11 insertions(+), 9 deletions(-)
+
+diff --git a/libobjc/configure b/libobjc/configure
+index 1dfcb31..af4a6b4 100755
+--- a/libobjc/configure
++++ b/libobjc/configure
+@@ -3323,7 +3323,7 @@ case "${host}" in
+     ;;
+   *-cygwin*|*-mingw*)
+     # Tell libtool to build DLLs on Windows
+-    extra_ldflags_libobjc='-no-undefined -bindir $(bindir)'
++    extra_ldflags_libobjc='-no-undefined -bindir $(bindir) -export-symbols $(srcdir)/libobjc.def -Xcompiler -shared-libgcc'
+     ;;
+ esac
+ 
+diff --git a/libobjc/configure.ac b/libobjc/configure.ac
+index 8820edc..0d4b211 100644
+--- a/libobjc/configure.ac
++++ b/libobjc/configure.ac
+@@ -161,6 +161,9 @@ case "${host}" in
+     # Darwin needs -single_module when linking libobjc
+     extra_ldflags_libobjc=-Wl,-single_module
+     ;;
++  *-w64-mingw*)
++    extra_ldflags_libobjc='-no-undefined -bindir $(bindir) -export-symbols $(srcdir)/libobjc.def -Xcompiler -shared-libgcc'
++    ;;
+   *-cygwin*|*-mingw*)
+     # Tell libtool to build DLLs on Windows
+     extra_ldflags_libobjc='-no-undefined -bindir $(bindir)'
+diff --git a/libobjc/libobjc.def b/libobjc/libobjc.def
+index 27be47e..80a84fb 100644
+--- a/libobjc/libobjc.def
++++ b/libobjc/libobjc.def
+@@ -16,12 +16,12 @@
+ ;  You should have received a copy of the GNU General Public License along with
+ ;  GCC; see the file COPYING3.  If not, see <http://www.gnu.org/licenses/>.
+ 
+-LIBRARY libobjc
++; Do not decalre the name - let the linker/command line options do it
++; LIBRARY libobjc
+ EXPORTS
+ search_for_method_in_list
+ objc_get_uninstalled_dtable
+ objc_hash_is_key_in_hash
+-hash_is_key_in_hash
+ objc_verror
+ _objc_load_callback
+ objc_malloc
+@@ -156,14 +156,13 @@ sarray_new
+ sarray_realloc
+ sarray_remove_garbage
+ objc_hash_add
+-hash_add
+ objc_hash_delete
+-hash_delete
+ objc_hash_new
+-hash_new
+ objc_hash_next
+-hash_next
+ objc_hash_remove
+-hash_remove
+ objc_hash_value_for_key
+-hash_value_for_key
++objc_layout_structure
++objc_layout_structure_get_info
++objc_layout_structure_next_member
++objc_exception_throw
++__gnu_objc_personality_sj0
+-- 
+1.7.0.3.254.g4503b
+
