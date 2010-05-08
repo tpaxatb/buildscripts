@@ -1,4 +1,4 @@
-From 9dac07e8a4c2b7d29b6857af52522c82e5475da6 Mon Sep 17 00:00:00 2001
+From 4e28bb690f76a8cd6e3531a55ae6f604cf2c9bd4 Mon Sep 17 00:00:00 2001
 From: Doug Semler <dougsemler@gmail.com>
 Date: Thu, 6 May 2010 16:57:33 -0400
 Subject: [PATCH] Fix Objective C runtime DLL
@@ -17,9 +17,9 @@ libobc/Changelog:
 	  Export the exception personality.
 ---
  libobjc/configure    |    2 +-
- libobjc/configure.ac |    3 +++
+ libobjc/configure.ac |    2 +-
  libobjc/libobjc.def  |   15 +++++++--------
- 3 files changed, 11 insertions(+), 9 deletions(-)
+ 3 files changed, 9 insertions(+), 10 deletions(-)
 
 diff --git a/libobjc/configure b/libobjc/configure
 index 1dfcb31..af4a6b4 100755
@@ -35,19 +35,18 @@ index 1dfcb31..af4a6b4 100755
  esac
  
 diff --git a/libobjc/configure.ac b/libobjc/configure.ac
-index 8820edc..0d4b211 100644
+index 8820edc..972c377 100644
 --- a/libobjc/configure.ac
 +++ b/libobjc/configure.ac
-@@ -161,6 +161,9 @@ case "${host}" in
-     # Darwin needs -single_module when linking libobjc
-     extra_ldflags_libobjc=-Wl,-single_module
+@@ -163,7 +163,7 @@ case "${host}" in
      ;;
-+  *-w64-mingw*)
-+    extra_ldflags_libobjc='-no-undefined -bindir $(bindir) -export-symbols $(srcdir)/libobjc.def -Xcompiler -shared-libgcc'
-+    ;;
    *-cygwin*|*-mingw*)
      # Tell libtool to build DLLs on Windows
-     extra_ldflags_libobjc='-no-undefined -bindir $(bindir)'
+-    extra_ldflags_libobjc='-no-undefined -bindir $(bindir)'
++    extra_ldflags_libobjc='-no-undefined -bindir $(bindir) -export-symbols $(srcdir)/libobjc.def -Xcompiler -shared-libgcc'
+     ;;
+ esac
+ AC_SUBST(extra_ldflags_libobjc)
 diff --git a/libobjc/libobjc.def b/libobjc/libobjc.def
 index 27be47e..80a84fb 100644
 --- a/libobjc/libobjc.def
