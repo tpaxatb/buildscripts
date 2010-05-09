@@ -89,7 +89,7 @@ if [ ! -f config.status -o x"${RECONFIGURE}" = xyes ]; then
   defaultconfigflags="--prefix=${PREFIX} \
     --exec-prefix=${EXECPREFIX} \
     --mandir=\${datarootdir}/man \
-    --infodir=\${datarootdir}/man \
+    --infodir=\${datarootdir}/info \
     --localedir=\${datarootdir}/locale \
     --includedir=\${exec_prefix}/include \
     --enable-silent-rules \
