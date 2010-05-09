@@ -1,7 +1,7 @@
-From 4e28bb690f76a8cd6e3531a55ae6f604cf2c9bd4 Mon Sep 17 00:00:00 2001
+From fc1d16432cedd635950a20116e43eef9b4e7eaf9 Mon Sep 17 00:00:00 2001
 From: Doug Semler <dougsemler@gmail.com>
 Date: Thu, 6 May 2010 16:57:33 -0400
-Subject: [PATCH] Fix Objective C runtime DLL
+Subject: [PATCH 12/12] Fix Objective C runtime DLL
 
 The Objective C rutnime DLL was incomplete.  This patch fixes
 it by exporting the correct symbols and linking to the shared

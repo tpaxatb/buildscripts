@@ -1,7 +1,7 @@
-From bc2a622915333d9390a8af9acf87f06008b7fc0d Mon Sep 17 00:00:00 2001
+From 6dde5bcab77610a8da8a21c071b0876bd46c7f4f Mon Sep 17 00:00:00 2001
 From: Doug Semler <dougsemler@gmail.com>
 Date: Tue, 4 May 2010 09:26:27 -0400
-Subject: [PATCH 3/8] Fix PR/43538 - CXX_FLAGS_FOR_TARGET set incorrectly on linux
+Subject: [PATCH 02/12] Fix PR/43538 - CXX_FLAGS_FOR_TARGET set incorrectly on linux
 
 CXX_FLAGS_FOR_TARGET should add flags to the current ones, not
 blindly reset them.

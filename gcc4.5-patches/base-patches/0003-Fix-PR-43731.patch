@@ -1,7 +1,7 @@
-From 0bf9d4a9a9326fc80b8415fee0f14751edf188b4 Mon Sep 17 00:00:00 2001
+From 86841f3f6b237b305cf78943ca6ebdc55e363452 Mon Sep 17 00:00:00 2001
 From: Doug Semler <dougsemler@gmail.com>
 Date: Tue, 4 May 2010 09:27:03 -0400
-Subject: [PATCH 4/8] Fix PR/43731 - Mulitlib ada broken on i686-w64-mingw32 builds.
+Subject: [PATCH 03/12] Fix PR/43731 - Mulitlib ada broken on i686-w64-mingw32 builds.
 
 gcc/ada/ChangeLog:
 	* Makefile.in: Add logic for multilib on 32 bit mingw-w64

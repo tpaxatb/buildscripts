@@ -1,0 +1,80 @@
+From 099490b76b0f88822aa6e86d4dc7a147f171270e Mon Sep 17 00:00:00 2001
+From: Kai Tietz <kai.tietz@onevision.com>
+Date: Sat, 8 May 2010 17:17:57 -0400
+Subject: [PATCH 09/12] Patch http://gcc.gnu.org/ml/gcc-patches/2010-05/msg00027.html
+
+As for mingw 32-bit the library location has to remain /lib, but as
+/lib is binutils' library location and therefore always
+default-target's library path, I changed configuration for -w64-
+(multilib-capable mingw targets) so, that /lib remains folder for
+default-target's location.
+This makes for an i686 defaulted multilib location /lib for 32-bit and
+/lib64 for 64-bit libraries and objects files. For a 64-bit defaulted
+multilib location /lib for 64-bit and /lib32 for 32-bit libraries and
+object-files.
+
+ChangeLog
+
+        * config.gcc (i[34567]86-*-mingw* | x86_64-*-mingw*): Choose t-mingw-w64
+        or t-mingw-w32 for multilib configuration.
+        * config/i386/t-mingw-w64 (MULTILIB_OSDIRNAMES): Change lib64 to lib.
+        * config/i386/t-mingw-w32: New.
+---
+ gcc/config.gcc              |    5 ++++-
+ gcc/config/i386/t-mingw-w32 |   12 ++++++++++++
+ gcc/config/i386/t-mingw-w64 |    2 +-
+ 3 files changed, 17 insertions(+), 2 deletions(-)
+ create mode 100644 gcc/config/i386/t-mingw-w32
+
+diff --git a/gcc/config.gcc b/gcc/config.gcc
+index dd659a8..6c07ec0 100644
+--- a/gcc/config.gcc
++++ b/gcc/config.gcc
+@@ -1385,9 +1385,12 @@ i[34567]86-*-mingw* | x86_64-*-mingw*)
+ 	fi
+ 	tmake_file="${tmake_file} ${tmake_eh_file} i386/t-cygming"
+         case ${target} in
+-               *-w64-*)
++               x86_64-w64-*)
+                		tmake_file="${tmake_file} i386/t-mingw-w64"
+ 			;;
++	       i[34567]86-w64-*)
++			tmake_file="${tmake_file} i386/t-mingw-w32"
++			;;
+                *)
+                		tmake_file="${tmake_file} i386/t-mingw32"
+                      	;;
+diff --git a/gcc/config/i386/t-mingw-w32 b/gcc/config/i386/t-mingw-w32
+new file mode 100644
+index 0000000..62d6330
+--- /dev/null
++++ b/gcc/config/i386/t-mingw-w32
+@@ -0,0 +1,12 @@
++# Match SYSTEM_INCLUDE_DIR
++NATIVE_SYSTEM_HEADER_DIR = /mingw/include
++
++MULTILIB_OPTIONS = m64/m32
++MULTILIB_DIRNAMES = 64 32
++MULTILIB_OSDIRNAMES = ../lib64 ../lib
++
++# MinGW-specific parts of LIB_SPEC
++SHLIB_LC = -lmingw32 -lmingwex -lmoldname -lmsvcrt -luser32 -lkernel32 -ladvapi32 -lshell32
++
++LIBGCC = stmp-multilib
++INSTALL_LIBGCC = install-multilib
+diff --git a/gcc/config/i386/t-mingw-w64 b/gcc/config/i386/t-mingw-w64
+index dbbe00a..b0106e5 100644
+--- a/gcc/config/i386/t-mingw-w64
++++ b/gcc/config/i386/t-mingw-w64
+@@ -3,7 +3,7 @@ NATIVE_SYSTEM_HEADER_DIR = /mingw/include
+ 
+ MULTILIB_OPTIONS = m64/m32
+ MULTILIB_DIRNAMES = 64 32
+-MULTILIB_OSDIRNAMES = ../lib64 ../lib32
++MULTILIB_OSDIRNAMES = ../lib ../lib32
+ 
+ # MinGW-specific parts of LIB_SPEC
+ SHLIB_LC = -lmingw32 -lmingwex -lmoldname -lmsvcrt -luser32 -lkernel32 -ladvapi32 -lshell32
+-- 
+1.7.0.3.254.g4503b
+

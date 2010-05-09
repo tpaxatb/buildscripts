@@ -1,7 +1,7 @@
-From 202a33c1836ebf0dca54b7774a20579bf8b27739 Mon Sep 17 00:00:00 2001
+From c721d52a85f915fad595c735df4f86a3e4674ee3 Mon Sep 17 00:00:00 2001
 From: Doug Semler <dougsemler@gmail.com>
 Date: Tue, 4 May 2010 09:23:07 -0400
-Subject: [PATCH 1/8] Fixup build compiler flags.
+Subject: [PATCH 10/12] Fixup build compiler flags.
 
 Mingw-64 currently has build compiler flags that search for files
 during the build in hard coded locations.  This is not clean, and
@@ -57,7 +57,7 @@ index cdd8bf2..32122db 100644
    *-mingw*)
    # MinGW can't be handled as Cygwin above since it does not use newlib.
 diff --git a/gcc/config/i386/t-mingw-w64 b/gcc/config/i386/t-mingw-w64
-index dbbe00a..6227c13 100644
+index b0106e5..afc6764 100644
 --- a/gcc/config/i386/t-mingw-w64
 +++ b/gcc/config/i386/t-mingw-w64
 @@ -10,3 +10,5 @@ SHLIB_LC = -lmingw32 -lmingwex -lmoldname -lmsvcrt -luser32 -lkernel32 -ladvapi3

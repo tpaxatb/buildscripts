@@ -1,7 +1,7 @@
-From 88b7e642f51706804a3614843d63bd965a501b5d Mon Sep 17 00:00:00 2001
+From c1f92f699e8ac5adf902f27c5ee7658c8b80d4f7 Mon Sep 17 00:00:00 2001
 From: Ralf Wildenhues <Ralf.Wildenhues@gmx.de>
 Date: Tue, 4 May 2010 11:46:49 -0400
-Subject: [PATCH 8/8] Fix PR/40974 - Multiple inclusion guard prevents canadian cross
+Subject: [PATCH 05/12] Fix PR/40974 - Multiple inclusion guard prevents canadian cross
 
 When building precompiled headers, a multiple inclusion guard will
 prevent the system fenv.h from being pulled in correctly.

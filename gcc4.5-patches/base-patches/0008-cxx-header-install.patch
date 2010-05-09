@@ -1,0 +1,136 @@
+From e140666610b13f7e059871a214cceb0e023f34f0 Mon Sep 17 00:00:00 2001
+From: Doug Semler <dougsemler@gmail.com>
+Date: Sat, 8 May 2010 15:46:29 -0400
+Subject: [PATCH 08/12] More exec_prefix instead of prefix changes.  Use for C++ library.
+
+The normal tool subdirectories, such as those for target libraries, etc,
+are based on exec_prefix.  This patch makes it consistent for the C++
+include file directory default.
+
+Changes:
+	* config/gxx-include-dir.m4: use exec_prefix instead of prefix.
+	* libstdc++-v3/acinclude.m4: Use exec_prefix instead of prefix.
+	* gcc/configure.ac: Add prefix_to_exec_prefix to logic.
+	* gcc/configure: Regenerate.
+	* libjava/configure: Regenerate.
+	* libstdc++-v3/configure: Regenerate.
+---
+ config/gxx-include-dir.m4 |    4 ++--
+ gcc/configure             |    2 +-
+ gcc/configure.ac          |    2 +-
+ libjava/configure         |    4 ++--
+ libstdc++-v3/acinclude.m4 |    6 +++---
+ libstdc++-v3/configure    |    6 +++---
+ 6 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/config/gxx-include-dir.m4 b/config/gxx-include-dir.m4
+index 4f54d42..8482724 100644
+--- a/config/gxx-include-dir.m4
++++ b/config/gxx-include-dir.m4
+@@ -20,9 +20,9 @@ case "${with_gxx_include_dir}" in
+ 	gxx_include_dir='include/$(libstdcxx_incdir)'
+ 	if test -n "$with_cross_host" && 
+            test x"$with_cross_host" != x"no"; then	
+-          gxx_include_dir='${prefix}/${target_alias}/'"$gxx_include_dir"
++          gxx_include_dir='${exec_prefix}/${target_alias}/'"$gxx_include_dir"
+         else
+-          gxx_include_dir='${prefix}/'"$gxx_include_dir"
++          gxx_include_dir='${exec_prefix}/'"$gxx_include_dir"
+         fi;;
+     esac ;;
+   *) gxx_include_dir=${with_gxx_include_dir} ;;
+diff --git a/gcc/configure b/gcc/configure
+index cb1f0b6..b3f4778 100755
+--- a/gcc/configure
++++ b/gcc/configure
+@@ -3268,7 +3268,7 @@ if test x${gcc_gxx_include_dir} = x; then
+     if test x$host != x$target; then
+        libstdcxx_incdir="$target_alias/$libstdcxx_incdir"
+     fi
+-    gcc_gxx_include_dir="\$(libsubdir)/\$(libsubdir_to_prefix)$libstdcxx_incdir"
++    gcc_gxx_include_dir="\$(libsubdir)/\$(libsubdir_to_prefix)\$(prefix_to_exec_prefix)$libstdcxx_incdir"
+   fi
+ fi
+ 
+diff --git a/gcc/configure.ac b/gcc/configure.ac
+index fd32832..d2cf5e0 100644
+--- a/gcc/configure.ac
++++ b/gcc/configure.ac
+@@ -140,7 +140,7 @@ if test x${gcc_gxx_include_dir} = x; then
+     if test x$host != x$target; then
+        libstdcxx_incdir="$target_alias/$libstdcxx_incdir"
+     fi
+-    gcc_gxx_include_dir="\$(libsubdir)/\$(libsubdir_to_prefix)$libstdcxx_incdir"
++    gcc_gxx_include_dir="\$(libsubdir)/\$(libsubdir_to_prefix)\$(prefix_to_exec_prefix)$libstdcxx_incdir"
+   fi
+ fi
+ 
+diff --git a/libjava/configure b/libjava/configure
+index 6be8109..d97f7d0 100755
+--- a/libjava/configure
++++ b/libjava/configure
+@@ -23784,9 +23784,9 @@ case "${with_gxx_include_dir}" in
+ 	gxx_include_dir='include/$(libstdcxx_incdir)'
+ 	if test -n "$with_cross_host" &&
+            test x"$with_cross_host" != x"no"; then
+-          gxx_include_dir='${prefix}/${target_alias}/'"$gxx_include_dir"
++          gxx_include_dir='${exec_prefix}/${target_alias}/'"$gxx_include_dir"
+         else
+-          gxx_include_dir='${prefix}/'"$gxx_include_dir"
++          gxx_include_dir='${exec_prefix}/'"$gxx_include_dir"
+         fi;;
+     esac ;;
+   *) gxx_include_dir=${with_gxx_include_dir} ;;
+diff --git a/libstdc++-v3/acinclude.m4 b/libstdc++-v3/acinclude.m4
+index f54517f..4bf1cbc 100644
+--- a/libstdc++-v3/acinclude.m4
++++ b/libstdc++-v3/acinclude.m4
+@@ -681,7 +681,7 @@ dnl config/gxx-include-dir.m4 must be kept consistant with this as well.
+ AC_DEFUN([GLIBCXX_EXPORT_INSTALL_INFO], [
+   glibcxx_toolexecdir=no
+   glibcxx_toolexeclibdir=no
+-  glibcxx_prefixdir=$prefix
++  glibcxx_prefixdir=$exec_prefix
+ 
+   AC_MSG_CHECKING([for gxx-include-dir])
+   AC_ARG_WITH([gxx-include-dir],
+@@ -712,9 +712,9 @@ AC_DEFUN([GLIBCXX_EXPORT_INSTALL_INFO], [
+     gxx_include_dir='include/c++/${gcc_version}'
+     if test -n "$with_cross_host" && 
+        test x"$with_cross_host" != x"no"; then	
+-      gxx_include_dir='${prefix}/${target_alias}/'"$gxx_include_dir"
++      gxx_include_dir='${exec_prefix}/${target_alias}/'"$gxx_include_dir"
+     else
+-      gxx_include_dir='${prefix}/'"$gxx_include_dir"
++      gxx_include_dir='${exec_prefix}/'"$gxx_include_dir"
+     fi
+   fi
+ 
+diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
+index dc77c0d..2bbb220 100755
+--- a/libstdc++-v3/configure
++++ b/libstdc++-v3/configure
+@@ -59040,7 +59040,7 @@ fi
+ 
+   glibcxx_toolexecdir=no
+   glibcxx_toolexeclibdir=no
+-  glibcxx_prefixdir=$prefix
++  glibcxx_prefixdir=$exec_prefix
+ 
+   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for gxx-include-dir" >&5
+ $as_echo_n "checking for gxx-include-dir... " >&6; }
+@@ -59080,9 +59080,9 @@ $as_echo "$version_specific_libs" >&6; }
+     gxx_include_dir='include/c++/${gcc_version}'
+     if test -n "$with_cross_host" &&
+        test x"$with_cross_host" != x"no"; then
+-      gxx_include_dir='${prefix}/${target_alias}/'"$gxx_include_dir"
++      gxx_include_dir='${exec_prefix}/${target_alias}/'"$gxx_include_dir"
+     else
+-      gxx_include_dir='${prefix}/'"$gxx_include_dir"
++      gxx_include_dir='${exec_prefix}/'"$gxx_include_dir"
+     fi
+   fi
+ 
+-- 
+1.7.0.3.254.g4503b
+

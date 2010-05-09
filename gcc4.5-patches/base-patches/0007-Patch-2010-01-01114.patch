@@ -1,7 +1,7 @@
-From 6a0f6d2e0894a328a6c9b042b63dd8f8100f7dc1 Mon Sep 17 00:00:00 2001
+From 030b6f1a20f53015304d6512cf38fc205950b4df Mon Sep 17 00:00:00 2001
 From: Ozkan Sezer <sezeroz@gmail.com>
 Date: Tue, 4 May 2010 09:48:07 -0400
-Subject: [PATCH 7/8] Patch http://gcc.gnu.org/ml/gcc-patches/2010-01/msg01114.html
+Subject: [PATCH 07/12] Patch http://gcc.gnu.org/ml/gcc-patches/2010-01/msg01114.html
 
 Fix the header includes of the system headers.
 

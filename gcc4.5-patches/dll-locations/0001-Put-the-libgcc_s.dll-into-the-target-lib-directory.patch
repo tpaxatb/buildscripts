@@ -1,0 +1,46 @@
+From 4d753a3a9db8523ceaf742f3e575e2b0283af83c Mon Sep 17 00:00:00 2001
+From: Doug Semler <dougsemler@gmail.com>
+Date: Sun, 9 May 2010 09:21:57 -0400
+Subject: [PATCH 1/2] Put the libgcc_s.dll into the target lib directory.
+
+This makes the library installation consistent with the other
+runtime library locations, except for --enable-version-specific.
+
+Nor does it place the native library into bindir when building
+a native toolchain.
+
+MULTIDIR is . {biarch}
+MULTIOSDIR is ../lib  ../lib{biarch}
+
+The logic SHOULD be:
+  Version Specific Runtime: $(slibdir)/$(MULTIDIR)
+    This places them in lib/gcc/$(target)/$(version)
+                        lib/gcc/$(target)/$(version)/{biarch}
+
+  Cross Compiler: $(slibdir)/$(MULTIOSDIR)
+    This places them in $(target)/lib
+                        $(target)/lib{biarch}
+
+  Native Compiler: ???
+    Places them in $(bindir)
+                   $(targetlib)/lib{biarch}
+---
+ gcc/config/i386/t-cygming |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/gcc/config/i386/t-cygming b/gcc/config/i386/t-cygming
+index 4268633..8cbc263 100644
+--- a/gcc/config/i386/t-cygming
++++ b/gcc/config/i386/t-cygming
+@@ -93,7 +93,7 @@ SHLIB_LINK = $(LN_S) -f $(SHLIB_MAP) $(SHLIB_MAP).def && \
+ SHLIB_INSTALL = \
+ 	$$(mkinstalldirs) $$(DESTDIR)$$(slibdir)$(SHLIB_SLIBDIR_QUAL); \
+ 	$(INSTALL_PROGRAM) $(SHLIB_DIR)/$(SHLIB_SONAME) \
+-	  $$(DESTDIR)$$(bindir)/$(SHLIB_SONAME); \
++	  $$(DESTDIR)$$(slibdir)$(SHLIB_SLIBDIR_QUAL)/$(SHLIB_SONAME); \
+ 	$(INSTALL_DATA) $(SHLIB_DIR)/$(SHLIB_IMPLIB) \
+ 	  $$(DESTDIR)$$(slibdir)$(SHLIB_SLIBDIR_QUAL)/$(SHLIB_IMPLIB)
+ SHLIB_MKMAP = $(srcdir)/mkmap-flat.awk
+-- 
+1.7.0.3.254.g4503b
+

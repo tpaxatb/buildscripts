@@ -1,0 +1,1169 @@
+From 9c2aaf05854f6b8b130ddd63f31990f6b6855e28 Mon Sep 17 00:00:00 2001
+From: Doug Semler <dougsemler@gmail.com>
+Date: Sat, 8 May 2010 23:10:49 -0400
+Subject: [PATCH 2/2] Fix installation of DLLs - part 1.
+
+This patch installs DLL files into more appropriate directories
+for mingw/cygwin.
+
+For cross compilers, bindir is not the correct location
+for the DLL files.  In addition, multilib configurations currently
+place incorrect versions into bindir (depending on order in which
+they are installed).
+
+This patch fixes the issue by placing the DLL files along side of
+the static/import libraries for cross compilers or
+version specific runtime libraries.  In addition, for native
+toolchains, this patch places the native dll into bindir (as
+it currently is for mingw/cygwin configurations) and any biarch
+files are placed into the toolexeclibdir.
+
+It does not fix the libgcc_s-1.dll installation location.
+
+TODO: ada runtime, boehm-gc, libmudflap.
+
+libgfortran/ChangeLog:
+	* configure.ac: Set dllbindir to appropriate location.
+	* Makefile.am: Install into new dllbindir location.
+	* configure: Regenerate.
+	* Makefile.in: Regenerate.
+
+libgomp/ChangeLog:
+	* configure.ac: Set dllbindir to appropriate location.
+	* Makefile.am: Install into new dllbindir location.
+	* configure: Regenerate.
+	* Makefile.in: Regenerate.
+	* testsuite/Makefile.in: Regenerate.
+
+libjava/ChangeLog:
+	* configure.ac: Set dllbindir to appropriate location.
+	* configure.host: Install into new dllbindir location.
+	* configure: Regenerate.
+	* Makefile.in: Regenerate.
+	* gcj/Makefile.in: Regenerate.
+	* include/Makefile.in: Regenerate.
+	* testsuite/Makefile.in: Regenerate.
+
+libobjc/ChangeLog:
+	* configure.ac: Set dllbindir to appropriate location.
+	  Install into new dllbindir location.
+	* configure: Regenerate.
+
+libssp/ChangeLog:
+	* configure.ac: Set dllbindir to appropriate location.
+	* Makefile.am: Install into new dllbindir location.
+	* configure: Regenerate.
+	* Makefile.in: Regenerate.
+
+libstdc++-v3/ChangeLog:
+	* acinclude.m4: Set glibcxx_dllbindir to appropriate location.
+	* fragment.am: Set dllbindir to gclibcxx_dllbindir.
+	* configure.host: Install into new dllbindir location.
+	* configure: Regenerate.
+	* Makefile.in: Regenerate.
+	* doc/Makefile.in: Regenerate.
+	* include/Makefile.in: Regenerate.
+	* libsupc++/Makefile.in: Regenerate.
+	* po/Makefile.in: Regenerate.
+	* python/Makefile.in: Regenerate.
+	* src/Makefile.in: Regenerate.
+	* testsuite/Makefile.in: Regenerate.
+---
+ libgfortran/Makefile.am            |    2 +-
+ libgfortran/Makefile.in            |    3 ++-
+ libgfortran/configure              |   17 ++++++++++++++---
+ libgfortran/configure.ac           |   12 +++++++++++-
+ libgomp/Makefile.am                |    2 +-
+ libgomp/Makefile.in                |    3 ++-
+ libgomp/configure                  |   17 ++++++++++++++---
+ libgomp/configure.ac               |   12 +++++++++++-
+ libgomp/testsuite/Makefile.in      |    1 +
+ libjava/Makefile.in                |    1 +
+ libjava/configure                  |   20 ++++++++++++++++----
+ libjava/configure.ac               |   13 ++++++++++++-
+ libjava/configure.host             |    2 +-
+ libjava/gcj/Makefile.in            |    1 +
+ libjava/include/Makefile.in        |    1 +
+ libjava/testsuite/Makefile.in      |    1 +
+ libobjc/configure                  |   21 ++++++++++++++++-----
+ libobjc/configure.ac               |   14 ++++++++++++--
+ libssp/Makefile.am                 |    2 +-
+ libssp/Makefile.in                 |    3 ++-
+ libssp/configure                   |   17 ++++++++++++++---
+ libssp/configure.ac                |   12 +++++++++++-
+ libstdc++-v3/Makefile.in           |    2 ++
+ libstdc++-v3/acinclude.m4          |   10 +++++++++-
+ libstdc++-v3/configure             |   26 +++++++++++++++++---------
+ libstdc++-v3/configure.host        |    4 ++--
+ libstdc++-v3/doc/Makefile.in       |    2 ++
+ libstdc++-v3/fragment.am           |    1 +
+ libstdc++-v3/include/Makefile.in   |    2 ++
+ libstdc++-v3/libsupc++/Makefile.in |    2 ++
+ libstdc++-v3/po/Makefile.in        |    2 ++
+ libstdc++-v3/python/Makefile.in    |    2 ++
+ libstdc++-v3/src/Makefile.in       |    2 ++
+ libstdc++-v3/testsuite/Makefile.in |    2 ++
+ 34 files changed, 191 insertions(+), 43 deletions(-)
+
+diff --git a/libgfortran/Makefile.am b/libgfortran/Makefile.am
+index bd767a2..e01e523 100644
+--- a/libgfortran/Makefile.am
++++ b/libgfortran/Makefile.am
+@@ -14,7 +14,7 @@ version_arg =
+ endif
+ 
+ LTLDFLAGS = $(shell $(SHELL) $(top_srcdir)/../libtool-ldflags $(LDFLAGS)) \
+-	    -no-undefined -bindir "$(bindir)"
++	    -no-undefined -bindir "$(dllbindir)"
+ 
+ toolexeclib_LTLIBRARIES = libgfortran.la
+ libgfortran_la_LINK = $(LINK) $(libgfortran_la_LDFLAGS)
+diff --git a/libgfortran/Makefile.in b/libgfortran/Makefile.in
+index 02e93b1..4e02686 100644
+--- a/libgfortran/Makefile.in
++++ b/libgfortran/Makefile.in
+@@ -923,6 +923,7 @@ build_vendor = @build_vendor@
+ builddir = @builddir@
+ datadir = @datadir@
+ datarootdir = @datarootdir@
++dllbindir = @dllbindir@
+ docdir = @docdir@
+ dvidir = @dvidir@
+ enable_shared = @enable_shared@
+@@ -972,7 +973,7 @@ gcc_version := $(shell cat $(top_srcdir)/../gcc/BASE-VER)
+ @LIBGFOR_USE_SYMVER_FALSE@version_arg = 
+ @LIBGFOR_USE_SYMVER_TRUE@version_arg = -Wl,--version-script=$(srcdir)/gfortran.map
+ LTLDFLAGS = $(shell $(SHELL) $(top_srcdir)/../libtool-ldflags $(LDFLAGS)) \
+-	    -no-undefined -bindir "$(bindir)"
++	    -no-undefined -bindir "$(dllbindir)"
+ 
+ toolexeclib_LTLIBRARIES = libgfortran.la
+ libgfortran_la_LINK = $(LINK) $(libgfortran_la_LDFLAGS)
+diff --git a/libgfortran/configure b/libgfortran/configure
+index 46e0863..b18b151 100755
+--- a/libgfortran/configure
++++ b/libgfortran/configure
+@@ -650,6 +650,7 @@ CPPFLAGS
+ LDFLAGS
+ CFLAGS
+ CC
++dllbindir
+ toolexeclibdir
+ toolexecdir
+ multi_basedir
+@@ -3375,6 +3376,10 @@ fi
+ 
+ # Calculate toolexeclibdir
+ # Also toolexecdir, though it's only used in toolexeclibdir
++# Also, default dllbindir to be toolexeclibdir.  Except for
++# when native (e.g. not with-cross-host) where it will be
++# bindir for native dll.
++dllbindir='$(toolexeclibdir)'
+ case ${version_specific_libs} in
+   yes)
+     # Need the gcc compiler version to know where to install libraries
+@@ -3395,7 +3400,12 @@ case ${version_specific_libs} in
+     fi
+     multi_os_directory=`$CC -print-multi-os-directory`
+     case $multi_os_directory in
+-      .) ;; # Avoid trailing /.
++      .)
++        if test -z "$with_cross_host" ||
++           test x"$with_cross_host" = x"no"; then
++          dllbindir='$(bindir)'
++        fi
++        ;; # Avoid trailing /.
+       *) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
+     esac
+     ;;
+@@ -3403,6 +3413,7 @@ esac
+ 
+ 
+ 
++
+ # Check the compiler.
+ # The same as in boehm-gc and libstdc++. Have to borrow it from there.
+ # We must force CC to /not/ be precious variables; otherwise
+@@ -11306,7 +11317,7 @@ else
+   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
+   lt_status=$lt_dlunknown
+   cat > conftest.$ac_ext <<_LT_EOF
+-#line 11309 "configure"
++#line 11320 "configure"
+ #include "confdefs.h"
+ 
+ #if HAVE_DLFCN_H
+@@ -11412,7 +11423,7 @@ else
+   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
+   lt_status=$lt_dlunknown
+   cat > conftest.$ac_ext <<_LT_EOF
+-#line 11415 "configure"
++#line 11426 "configure"
+ #include "confdefs.h"
+ 
+ #if HAVE_DLFCN_H
+diff --git a/libgfortran/configure.ac b/libgfortran/configure.ac
+index 104f2c1..bc5a97c 100644
+--- a/libgfortran/configure.ac
++++ b/libgfortran/configure.ac
+@@ -82,6 +82,10 @@ fi
+ 
+ # Calculate toolexeclibdir
+ # Also toolexecdir, though it's only used in toolexeclibdir
++# Also, default dllbindir to be toolexeclibdir.  Except for
++# when native (e.g. not with-cross-host) where it will be
++# bindir for native dll.
++dllbindir='$(toolexeclibdir)'
+ case ${version_specific_libs} in
+   yes)
+     # Need the gcc compiler version to know where to install libraries
+@@ -102,13 +106,19 @@ case ${version_specific_libs} in
+     fi
+     multi_os_directory=`$CC -print-multi-os-directory`
+     case $multi_os_directory in
+-      .) ;; # Avoid trailing /.
++      .)
++        if test -z "$with_cross_host" ||
++           test x"$with_cross_host" = x"no"; then
++          dllbindir='$(bindir)'
++        fi
++        ;; # Avoid trailing /.
+       *) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
+     esac
+     ;;
+ esac
+ AC_SUBST(toolexecdir)
+ AC_SUBST(toolexeclibdir)
++AC_SUBST(dllbindir)
+ 
+ # Check the compiler.
+ # The same as in boehm-gc and libstdc++. Have to borrow it from there.
+diff --git a/libgomp/Makefile.am b/libgomp/Makefile.am
+index 3786bee..903576c 100644
+--- a/libgomp/Makefile.am
++++ b/libgomp/Makefile.am
+@@ -28,7 +28,7 @@ libgomp_version_script =
+ endif
+ libgomp_version_info = -version-info $(libtool_VERSION)
+ libgomp_la_LDFLAGS = $(libgomp_version_info) $(libgomp_version_script) \
+-        -no-undefined -bindir "$(bindir)"
++        -no-undefined -bindir "$(dllbindir)"
+ libgomp_la_LINK = $(LINK) $(libgomp_la_LDFLAGS)
+ 
+ libgomp_la_SOURCES = alloc.c barrier.c critical.c env.c error.c iter.c \
+diff --git a/libgomp/Makefile.in b/libgomp/Makefile.in
+index a972b4e..97394ce 100644
+--- a/libgomp/Makefile.in
++++ b/libgomp/Makefile.in
+@@ -284,6 +284,7 @@ builddir = @builddir@
+ config_path = @config_path@
+ datadir = @datadir@
+ datarootdir = @datarootdir@
++dllbindir = @dllbindir@
+ docdir = @docdir@
+ dvidir = @dvidir@
+ enable_shared = @enable_shared@
+@@ -341,7 +342,7 @@ nodist_toolexeclib_HEADERS = libgomp.spec
+ @LIBGOMP_BUILD_VERSIONED_SHLIB_TRUE@libgomp_version_script = -Wl,--version-script,$(top_srcdir)/libgomp.map
+ libgomp_version_info = -version-info $(libtool_VERSION)
+ libgomp_la_LDFLAGS = $(libgomp_version_info) $(libgomp_version_script) \
+-        -no-undefined -bindir "$(bindir)"
++        -no-undefined -bindir "$(dllbindir)"
+ 
+ libgomp_la_LINK = $(LINK) $(libgomp_la_LDFLAGS)
+ libgomp_la_SOURCES = alloc.c barrier.c critical.c env.c error.c iter.c \
+diff --git a/libgomp/configure b/libgomp/configure
+index d2018b8..5ca053b 100755
+--- a/libgomp/configure
++++ b/libgomp/configure
+@@ -670,6 +670,7 @@ CPPFLAGS
+ LDFLAGS
+ CFLAGS
+ CC
++dllbindir
+ toolexeclibdir
+ toolexecdir
+ multi_basedir
+@@ -3275,6 +3276,10 @@ ac_config_commands="$ac_config_commands default-1"
+ 
+ # Calculate toolexeclibdir
+ # Also toolexecdir, though it's only used in toolexeclibdir
++# Also, default dllbindir to be toolexeclibdir.  Except for
++# when native (e.g. not with-cross-host) where it will be
++# bindir for native dll.
++dllbindir='$(toolexeclibdir)'
+ case ${enable_version_specific_runtime_libs} in
+   yes)
+     # Need the gcc compiler version to know where to install libraries
+@@ -3295,7 +3300,12 @@ case ${enable_version_specific_runtime_libs} in
+     fi
+     multi_os_directory=`$CC -print-multi-os-directory`
+     case $multi_os_directory in
+-      .) ;; # Avoid trailing /.
++      .)
++        if test -z "$with_cross_host" ||
++           test x"$with_cross_host" = x"no"; then
++          dllbindir='$(bindir)'
++        fi
++        ;; # Avoid trailing /.
+       *) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
+     esac
+     ;;
+@@ -3303,6 +3313,7 @@ esac
+ 
+ 
+ 
++
+ # Check the compiler.
+ # The same as in boehm-gc and libstdc++. Have to borrow it from there.
+ # We must force CC to /not/ be precious variables; otherwise
+@@ -11082,7 +11093,7 @@ else
+   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
+   lt_status=$lt_dlunknown
+   cat > conftest.$ac_ext <<_LT_EOF
+-#line 11085 "configure"
++#line 11096 "configure"
+ #include "confdefs.h"
+ 
+ #if HAVE_DLFCN_H
+@@ -11188,7 +11199,7 @@ else
+   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
+   lt_status=$lt_dlunknown
+   cat > conftest.$ac_ext <<_LT_EOF
+-#line 11191 "configure"
++#line 11202 "configure"
+ #include "confdefs.h"
+ 
+ #if HAVE_DLFCN_H
+diff --git a/libgomp/configure.ac b/libgomp/configure.ac
+index fefffe9..e591271 100644
+--- a/libgomp/configure.ac
++++ b/libgomp/configure.ac
+@@ -66,6 +66,10 @@ AM_ENABLE_MULTILIB(, ..)
+ 
+ # Calculate toolexeclibdir
+ # Also toolexecdir, though it's only used in toolexeclibdir
++# Also, default dllbindir to be toolexeclibdir.  Except for
++# when native (e.g. not with-cross-host) where it will be
++# bindir for native dll.
++dllbindir='$(toolexeclibdir)'
+ case ${enable_version_specific_runtime_libs} in
+   yes)
+     # Need the gcc compiler version to know where to install libraries
+@@ -86,13 +90,19 @@ case ${enable_version_specific_runtime_libs} in
+     fi
+     multi_os_directory=`$CC -print-multi-os-directory`
+     case $multi_os_directory in
+-      .) ;; # Avoid trailing /.
++      .)
++        if test -z "$with_cross_host" ||
++           test x"$with_cross_host" = x"no"; then
++          dllbindir='$(bindir)'
++        fi
++        ;; # Avoid trailing /.
+       *) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
+     esac
+     ;;
+ esac
+ AC_SUBST(toolexecdir)
+ AC_SUBST(toolexeclibdir)
++AC_SUBST(dllbindir)
+ 
+ # Check the compiler.
+ # The same as in boehm-gc and libstdc++. Have to borrow it from there.
+diff --git a/libgomp/testsuite/Makefile.in b/libgomp/testsuite/Makefile.in
+index 21c255d..5efe503 100644
+--- a/libgomp/testsuite/Makefile.in
++++ b/libgomp/testsuite/Makefile.in
+@@ -161,6 +161,7 @@ builddir = @builddir@
+ config_path = @config_path@
+ datadir = @datadir@
+ datarootdir = @datarootdir@
++dllbindir = @dllbindir@
+ docdir = @docdir@
+ dvidir = @dvidir@
+ enable_shared = @enable_shared@
+diff --git a/libjava/Makefile.in b/libjava/Makefile.in
+index ed3b23b..c743ea0 100644
+--- a/libjava/Makefile.in
++++ b/libjava/Makefile.in
+@@ -819,6 +819,7 @@ builddir = @builddir@
+ datadir = @datadir@
+ datarootdir = @datarootdir@
+ dbexecdir = @dbexecdir@
++dllbindir = @dllbindir@
+ docdir = @docdir@
+ dvidir = @dvidir@
+ exec_prefix = @exec_prefix@
+diff --git a/libjava/configure b/libjava/configure
+index d97f7d0..25eadca 100755
+--- a/libjava/configure
++++ b/libjava/configure
+@@ -640,6 +640,7 @@ gxx_include_dir
+ gcjsubdir
+ dbexecdir
+ GCJVERSION
++dllbindir
+ toolexeclibdir
+ toolexecmainlibdir
+ toolexecdir
+@@ -13338,7 +13339,7 @@ else
+   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
+   lt_status=$lt_dlunknown
+   cat > conftest.$ac_ext <<_LT_EOF
+-#line 13341 "configure"
++#line 13342 "configure"
+ #include "confdefs.h"
+ 
+ #if HAVE_DLFCN_H
+@@ -13444,7 +13445,7 @@ else
+   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
+   lt_status=$lt_dlunknown
+   cat > conftest.$ac_ext <<_LT_EOF
+-#line 13447 "configure"
++#line 13448 "configure"
+ #include "confdefs.h"
+ 
+ #if HAVE_DLFCN_H
+@@ -19423,7 +19424,7 @@ if test "${enable_sjlj_exceptions+set}" = set; then :
+   enableval=$enable_sjlj_exceptions; :
+ else
+   cat > conftest.$ac_ext << EOF
+-#line 19426 "configure"
++#line 19427 "configure"
+ struct S { ~S(); };
+ void bar();
+ void foo()
+@@ -23707,6 +23708,10 @@ fi
+ 
+ # Process the option "--enable-version-specific-runtime-libs"
+ # Calculate toolexeclibdir
++# Also, default dllbindir to be toolexeclibdir.  Except for
++# when native (e.g. not with-cross-host) where it will be
++# bindir for native dll.
++dllbindir='$(toolexeclibdir)'
+ case ${version_specific_libs} in
+   yes)
+     # Need the gcc compiler version to know where to install libraries
+@@ -23729,7 +23734,13 @@ case ${version_specific_libs} in
+     fi
+     multi_os_directory=`$CC -print-multi-os-directory`
+     case $multi_os_directory in
+-      .) toolexeclibdir=$toolexecmainlibdir ;; # Avoid trailing /.
++      .)
++        if test -z "$with_cross_host" ||
++           test x"$with_cross_host" = x"no"; then
++          dllbindir='$(bindir)'
++        fi
++        toolexeclibdir=$toolexecmainlibdir
++        ;; # Avoid trailing /.
+       *) toolexeclibdir=$toolexecmainlibdir/$multi_os_directory ;;
+     esac
+     ;;
+@@ -23738,6 +23749,7 @@ esac
+ 
+ 
+ 
++
+ # Determine gcj and libgcj version number.
+ gcjversion=`cat "$srcdir/../gcc/BASE-VER"`
+ libgcj_soversion=`awk -F: '/^[^#].*:/ { print $1 }' $srcdir/libtool-version`
+diff --git a/libjava/configure.ac b/libjava/configure.ac
+index 7f4befa..193c21c 100644
+--- a/libjava/configure.ac
++++ b/libjava/configure.ac
+@@ -1510,6 +1510,10 @@ AC_SUBST(GCC_UNWIND_INCLUDE)
+ 
+ # Process the option "--enable-version-specific-runtime-libs"
+ # Calculate toolexeclibdir
++# Also, default dllbindir to be toolexeclibdir.  Except for
++# when native (e.g. not with-cross-host) where it will be
++# bindir for native dll.
++dllbindir='$(toolexeclibdir)'
+ case ${version_specific_libs} in
+   yes)
+     # Need the gcc compiler version to know where to install libraries
+@@ -1532,7 +1536,13 @@ case ${version_specific_libs} in
+     fi
+     multi_os_directory=`$CC -print-multi-os-directory`
+     case $multi_os_directory in
+-      .) toolexeclibdir=$toolexecmainlibdir ;; # Avoid trailing /.
++      .)
++        if test -z "$with_cross_host" ||
++           test x"$with_cross_host" = x"no"; then
++          dllbindir='$(bindir)'
++        fi
++        toolexeclibdir=$toolexecmainlibdir
++        ;; # Avoid trailing /.
+       *) toolexeclibdir=$toolexecmainlibdir/$multi_os_directory ;;
+     esac
+     ;;
+@@ -1540,6 +1550,7 @@ esac
+ AC_SUBST(toolexecdir)
+ AC_SUBST(toolexecmainlibdir)
+ AC_SUBST(toolexeclibdir)
++AC_SUBST(dllbindir)
+ 
+ # Determine gcj and libgcj version number.
+ gcjversion=`cat "$srcdir/../gcc/BASE-VER"`
+diff --git a/libjava/configure.host b/libjava/configure.host
+index 460ef2f..e918e07 100644
+--- a/libjava/configure.host
++++ b/libjava/configure.host
+@@ -353,7 +353,7 @@ case "${host}" in
+   	BACKTRACESPEC=
+ 	# Win32 DLLs are limited to 64k exported symbols each.
+ 	enable_libgcj_sublibs_default=yes
+-	libgcj_sublib_ltflags='-no-undefined -bindir $(bindir) \
++	libgcj_sublib_ltflags='-no-undefined -bindir $(dllbindir) \
+ 	    -Wl,-u,__ZN3org4ietf4jgss10GSSManagerC1Ev,-L..,-lgcj-noncore-dummy'
+ 	libgcj_sublib_core_extra_deps=libgcj-noncore-dummy.dll.a
+   ;;
+diff --git a/libjava/gcj/Makefile.in b/libjava/gcj/Makefile.in
+index dd17e55..a490ac6 100644
+--- a/libjava/gcj/Makefile.in
++++ b/libjava/gcj/Makefile.in
+@@ -283,6 +283,7 @@ builddir = @builddir@
+ datadir = @datadir@
+ datarootdir = @datarootdir@
+ dbexecdir = @dbexecdir@
++dllbindir = @dllbindir@
+ docdir = @docdir@
+ dvidir = @dvidir@
+ exec_prefix = @exec_prefix@
+diff --git a/libjava/include/Makefile.in b/libjava/include/Makefile.in
+index 2e04d8d..2a3c088 100644
+--- a/libjava/include/Makefile.in
++++ b/libjava/include/Makefile.in
+@@ -283,6 +283,7 @@ builddir = @builddir@
+ datadir = @datadir@
+ datarootdir = @datarootdir@
+ dbexecdir = @dbexecdir@
++dllbindir = @dllbindir@
+ docdir = @docdir@
+ dvidir = @dvidir@
+ exec_prefix = @exec_prefix@
+diff --git a/libjava/testsuite/Makefile.in b/libjava/testsuite/Makefile.in
+index fc1db70..768744f 100644
+--- a/libjava/testsuite/Makefile.in
++++ b/libjava/testsuite/Makefile.in
+@@ -258,6 +258,7 @@ builddir = @builddir@
+ datadir = @datadir@
+ datarootdir = @datarootdir@
+ dbexecdir = @dbexecdir@
++dllbindir = @dllbindir@
+ docdir = @docdir@
+ dvidir = @dvidir@
+ exec_prefix = @exec_prefix@
+diff --git a/libobjc/configure b/libobjc/configure
+index 1dfcb31..3882565 100755
+--- a/libobjc/configure
++++ b/libobjc/configure
+@@ -640,6 +640,7 @@ CFLAGS
+ CC
+ libsuffix
+ includedirname
++dllbindir
+ toolexeclibdir
+ toolexecdir
+ glibcpp_srcdir
+@@ -2463,6 +2464,10 @@ esac
+ 
+ # Calculate toolexeclibdir
+ # Also toolexecdir, though it's only used in toolexeclibdir
++# Also, default dllbindir to be toolexeclibdir.  Except for
++# when native (e.g. not with-cross-host) where it will be
++# bindir for native dll.
++dllbindir='$(toolexeclibdir)'
+ case ${version_specific_libs} in
+   yes)
+     # Need the gcc compiler version to know where to install libraries
+@@ -2483,7 +2488,12 @@ case ${version_specific_libs} in
+     fi
+     multi_os_directory=`$CC -print-multi-os-directory`
+     case $multi_os_directory in
+-      .) ;; # Avoid trailing /.
++      .)
++        if test -z "$with_cross_host" ||
++           test x"$with_cross_host" = x"no"; then
++          dllbindir='$(bindir)'
++        fi
++        ;; # Avoid trailing /.
+       *) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
+     esac
+     ;;
+@@ -2491,6 +2501,7 @@ esac
+ 
+ 
+ 
++
+ # Figure out if we want to name the include directory and the
+ #  library name changes differently.
+ includedirname=include
+@@ -3323,7 +3334,7 @@ case "${host}" in
+     ;;
+   *-cygwin*|*-mingw*)
+     # Tell libtool to build DLLs on Windows
+-    extra_ldflags_libobjc='-no-undefined -bindir $(bindir)'
++    extra_ldflags_libobjc='-no-undefined -bindir $(dllbindir)'
+     ;;
+ esac
+ 
+@@ -10566,7 +10577,7 @@ else
+   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
+   lt_status=$lt_dlunknown
+   cat > conftest.$ac_ext <<_LT_EOF
+-#line 10569 "configure"
++#line 10580 "configure"
+ #include "confdefs.h"
+ 
+ #if HAVE_DLFCN_H
+@@ -10672,7 +10683,7 @@ else
+   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
+   lt_status=$lt_dlunknown
+   cat > conftest.$ac_ext <<_LT_EOF
+-#line 10675 "configure"
++#line 10686 "configure"
+ #include "confdefs.h"
+ 
+ #if HAVE_DLFCN_H
+@@ -11246,7 +11257,7 @@ if test "${enable_sjlj_exceptions+set}" = set; then :
+   enableval=$enable_sjlj_exceptions; :
+ else
+   cat > conftest.$ac_ext << EOF
+-#line 11249 "configure"
++#line 11260 "configure"
+ @interface Frob
+ @end
+ @implementation Frob
+diff --git a/libobjc/configure.ac b/libobjc/configure.ac
+index 8820edc..b3c0006 100644
+--- a/libobjc/configure.ac
++++ b/libobjc/configure.ac
+@@ -97,6 +97,10 @@ AC_SUBST(glibcpp_srcdir)
+ 
+ # Calculate toolexeclibdir
+ # Also toolexecdir, though it's only used in toolexeclibdir
++# Also, default dllbindir to be toolexeclibdir.  Except for
++# when native (e.g. not with-cross-host) where it will be
++# bindir for native dll.
++dllbindir='$(toolexeclibdir)'
+ case ${version_specific_libs} in
+   yes)
+     # Need the gcc compiler version to know where to install libraries
+@@ -117,13 +121,19 @@ case ${version_specific_libs} in
+     fi
+     multi_os_directory=`$CC -print-multi-os-directory`
+     case $multi_os_directory in
+-      .) ;; # Avoid trailing /.
++      .)
++        if test -z "$with_cross_host" ||
++           test x"$with_cross_host" = x"no"; then
++          dllbindir='$(bindir)'
++        fi
++        ;; # Avoid trailing /.
+       *) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
+     esac
+     ;;
+ esac
+ AC_SUBST(toolexecdir)
+ AC_SUBST(toolexeclibdir)
++AC_SUBST(dllbindir)
+ 
+ # Figure out if we want to name the include directory and the
+ #  library name changes differently.
+@@ -163,7 +173,7 @@ case "${host}" in
+     ;;
+   *-cygwin*|*-mingw*)
+     # Tell libtool to build DLLs on Windows
+-    extra_ldflags_libobjc='-no-undefined -bindir $(bindir)'
++    extra_ldflags_libobjc='-no-undefined -bindir $(dllbindir)'
+     ;;
+ esac
+ AC_SUBST(extra_ldflags_libobjc)
+diff --git a/libssp/Makefile.am b/libssp/Makefile.am
+index 7b6e946..05845d7 100644
+--- a/libssp/Makefile.am
++++ b/libssp/Makefile.am
+@@ -35,7 +35,7 @@ libssp_la_SOURCES = \
+ libssp_la_LIBADD = 
+ libssp_la_DEPENDENCIES = $(version_dep) $(libssp_la_LIBADD)
+ libssp_la_LDFLAGS = -version-info `grep -v '^\#' $(srcdir)/libtool-version` \
+-		    $(version_arg) -no-undefined -bindir "$(bindir)"
++		    $(version_arg) -no-undefined -bindir "$(dllbindir)"
+ 
+ libssp_nonshared_la_SOURCES = \
+ 	ssp-local.c
+diff --git a/libssp/Makefile.in b/libssp/Makefile.in
+index fc83109..6853a4c 100644
+--- a/libssp/Makefile.in
++++ b/libssp/Makefile.in
+@@ -215,6 +215,7 @@ build_vendor = @build_vendor@
+ builddir = @builddir@
+ datadir = @datadir@
+ datarootdir = @datarootdir@
++dllbindir = @dllbindir@
+ docdir = @docdir@
+ dvidir = @dvidir@
+ enable_shared = @enable_shared@
+@@ -280,7 +281,7 @@ libssp_la_SOURCES = \
+ libssp_la_LIBADD = 
+ libssp_la_DEPENDENCIES = $(version_dep) $(libssp_la_LIBADD)
+ libssp_la_LDFLAGS = -version-info `grep -v '^\#' $(srcdir)/libtool-version` \
+-		    $(version_arg) -no-undefined -bindir "$(bindir)"
++		    $(version_arg) -no-undefined -bindir "$(dllbindir)"
+ 
+ libssp_nonshared_la_SOURCES = \
+ 	ssp-local.c
+diff --git a/libssp/configure b/libssp/configure
+index d5e8384..381b072 100755
+--- a/libssp/configure
++++ b/libssp/configure
+@@ -602,6 +602,7 @@ ac_subst_vars='am__EXEEXT_FALSE
+ am__EXEEXT_TRUE
+ LTLIBOBJS
+ LIBOBJS
++dllbindir
+ toolexeclibdir
+ toolexecdir
+ enable_static
+@@ -10591,7 +10592,7 @@ else
+   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
+   lt_status=$lt_dlunknown
+   cat > conftest.$ac_ext <<_LT_EOF
+-#line 10594 "configure"
++#line 10595 "configure"
+ #include "confdefs.h"
+ 
+ #if HAVE_DLFCN_H
+@@ -10697,7 +10698,7 @@ else
+   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
+   lt_status=$lt_dlunknown
+   cat > conftest.$ac_ext <<_LT_EOF
+-#line 10700 "configure"
++#line 10701 "configure"
+ #include "confdefs.h"
+ 
+ #if HAVE_DLFCN_H
+@@ -10939,6 +10940,10 @@ CC="$lt_save_CC"
+ 
+ # Calculate toolexeclibdir
+ # Also toolexecdir, though it's only used in toolexeclibdir
++# Also, default dllbindir to be toolexeclibdir.  Except for
++# when native (e.g. not with-cross-host) where it will be
++# bindir for native dll.
++dllbindir='$(toolexeclibdir)'
+ case ${version_specific_libs} in
+   yes)
+     # Need the gcc compiler version to know where to install libraries
+@@ -10959,7 +10964,12 @@ case ${version_specific_libs} in
+     fi
+     multi_os_directory=`$CC -print-multi-os-directory`
+     case $multi_os_directory in
+-      .) ;; # Avoid trailing /.
++      .)
++        if test -z "$with_cross_host" ||
++           test x"$with_cross_host" = x"no"; then
++          dllbindir='$(bindir)'
++        fi
++        ;; # Avoid trailing /.
+       *) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
+     esac
+     ;;
+@@ -10967,6 +10977,7 @@ esac
+ 
+ 
+ 
++
+ if test ${multilib} = yes; then
+   multilib_arg="--enable-multilib"
+ else
+diff --git a/libssp/configure.ac b/libssp/configure.ac
+index fae1057..b5953b5 100644
+--- a/libssp/configure.ac
++++ b/libssp/configure.ac
+@@ -136,6 +136,10 @@ AC_SUBST(enable_static)
+ 
+ # Calculate toolexeclibdir
+ # Also toolexecdir, though it's only used in toolexeclibdir
++# Also, default dllbindir to be toolexeclibdir.  Except for
++# when native (e.g. not with-cross-host) where it will be
++# bindir for native dll.
++dllbindir='$(toolexeclibdir)'
+ case ${version_specific_libs} in
+   yes)
+     # Need the gcc compiler version to know where to install libraries
+@@ -156,13 +160,19 @@ case ${version_specific_libs} in
+     fi
+     multi_os_directory=`$CC -print-multi-os-directory`
+     case $multi_os_directory in
+-      .) ;; # Avoid trailing /.
++      .)
++        if test -z "$with_cross_host" ||
++           test x"$with_cross_host" = x"no"; then
++          dllbindir='$(bindir)'
++        fi
++        ;; # Avoid trailing /.
+       *) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
+     esac
+     ;;
+ esac
+ AC_SUBST(toolexecdir)
+ AC_SUBST(toolexeclibdir)
++AC_SUBST(dllbindir)
+ 
+ if test ${multilib} = yes; then
+   multilib_arg="--enable-multilib"
+diff --git a/libstdc++-v3/Makefile.in b/libstdc++-v3/Makefile.in
+index ecfe02a..ac99f8e 100644
+--- a/libstdc++-v3/Makefile.in
++++ b/libstdc++-v3/Makefile.in
+@@ -261,6 +261,7 @@ glibcxx_MOFILES = @glibcxx_MOFILES@
+ glibcxx_PCHFLAGS = @glibcxx_PCHFLAGS@
+ glibcxx_POFILES = @glibcxx_POFILES@
+ glibcxx_builddir = @glibcxx_builddir@
++glibcxx_dllbindir = @glibcxx_dllbindir@
+ glibcxx_localedir = @glibcxx_localedir@
+ glibcxx_prefixdir = @glibcxx_prefixdir@
+ glibcxx_srcdir = @glibcxx_srcdir@
+@@ -313,6 +314,7 @@ PWD_COMMAND = $${PWDCMD-pwd}
+ STAMP = echo timestamp >
+ toolexecdir = $(glibcxx_toolexecdir)
+ toolexeclibdir = $(glibcxx_toolexeclibdir)
++dllbindir = $(glibcxx_dllbindir)
+ 
+ # These bits are all figured out from configure.  Look in acinclude.m4
+ # or configure.ac to see how they are set.  See GLIBCXX_EXPORT_FLAGS.
+diff --git a/libstdc++-v3/acinclude.m4 b/libstdc++-v3/acinclude.m4
+index 4bf1cbc..96076aa 100644
+--- a/libstdc++-v3/acinclude.m4
++++ b/libstdc++-v3/acinclude.m4
+@@ -672,6 +672,7 @@ dnl  gxx_install_dir
+ dnl  glibcxx_prefixdir
+ dnl  glibcxx_toolexecdir
+ dnl  glibcxx_toolexeclibdir
++dnl  glibcxx_dllbindir
+ dnl
+ dnl Assumes cross_compiling bits already done, and with_cross_host in
+ dnl particular.
+@@ -719,6 +720,7 @@ AC_DEFUN([GLIBCXX_EXPORT_INSTALL_INFO], [
+   fi
+ 
+   # Version-specific runtime libs processing.
++  glibcxx_dllbindir='$(glibcxx_toolexeclibdir)'
+   if test $version_specific_libs = yes; then
+     # Need the gcc compiler version to know where to install libraries
+     # and header files if --enable-version-specific-runtime-libs option
+@@ -744,7 +746,12 @@ AC_DEFUN([GLIBCXX_EXPORT_INSTALL_INFO], [
+     fi
+     multi_os_directory=`$CXX -print-multi-os-directory`
+     case $multi_os_directory in
+-      .) ;; # Avoid trailing /.
++      .)
++        if test -z "$with_cross_host" ||
++           test x"$with_cross_host" = x"no"; then
++          glibcxx_dllbindir='$(bindir)'
++        fi
++        ;; # Avoid trailing /.
+       *) glibcxx_toolexeclibdir=$glibcxx_toolexeclibdir/$multi_os_directory ;;
+     esac
+   fi
+@@ -756,6 +763,7 @@ AC_DEFUN([GLIBCXX_EXPORT_INSTALL_INFO], [
+   AC_SUBST(gxx_include_dir)
+   AC_SUBST(glibcxx_toolexecdir)
+   AC_SUBST(glibcxx_toolexeclibdir)
++  AC_SUBST(glibcxx_dllbindir)
+ ])
+ 
+ 
+diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
+index 2bbb220..11a8a4d 100755
+--- a/libstdc++-v3/configure
++++ b/libstdc++-v3/configure
+@@ -607,6 +607,7 @@ WARN_FLAGS
+ OPTIMIZE_CXXFLAGS
+ TOPLEVEL_INCLUDES
+ GLIBCXX_INCLUDES
++glibcxx_dllbindir
+ glibcxx_toolexeclibdir
+ glibcxx_toolexecdir
+ gxx_include_dir
+@@ -11441,7 +11442,7 @@ else
+   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
+   lt_status=$lt_dlunknown
+   cat > conftest.$ac_ext <<_LT_EOF
+-#line 11444 "configure"
++#line 11445 "configure"
+ #include "confdefs.h"
+ 
+ #if HAVE_DLFCN_H
+@@ -11547,7 +11548,7 @@ else
+   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
+   lt_status=$lt_dlunknown
+   cat > conftest.$ac_ext <<_LT_EOF
+-#line 11550 "configure"
++#line 11551 "configure"
+ #include "confdefs.h"
+ 
+ #if HAVE_DLFCN_H
+@@ -14887,7 +14888,7 @@ fi
+     #
+     # Fake what AC_TRY_COMPILE does.  XXX Look at redoing this new-style.
+     cat > conftest.$ac_ext << EOF
+-#line 14890 "configure"
++#line 14891 "configure"
+ struct S { ~S(); };
+ void bar();
+ void foo()
+@@ -15255,7 +15256,7 @@ $as_echo "$glibcxx_cv_atomic_long_long" >&6; }
+   # Fake what AC_TRY_COMPILE does.
+ 
+     cat > conftest.$ac_ext << EOF
+-#line 15258 "configure"
++#line 15259 "configure"
+ int main()
+ {
+   typedef bool atomic_type;
+@@ -15292,7 +15293,7 @@ $as_echo "$glibcxx_cv_atomic_bool" >&6; }
+     rm -f conftest*
+ 
+     cat > conftest.$ac_ext << EOF
+-#line 15295 "configure"
++#line 15296 "configure"
+ int main()
+ {
+   typedef short atomic_type;
+@@ -15329,7 +15330,7 @@ $as_echo "$glibcxx_cv_atomic_short" >&6; }
+     rm -f conftest*
+ 
+     cat > conftest.$ac_ext << EOF
+-#line 15332 "configure"
++#line 15333 "configure"
+ int main()
+ {
+   // NB: _Atomic_word not necessarily int.
+@@ -15367,7 +15368,7 @@ $as_echo "$glibcxx_cv_atomic_int" >&6; }
+     rm -f conftest*
+ 
+     cat > conftest.$ac_ext << EOF
+-#line 15370 "configure"
++#line 15371 "configure"
+ int main()
+ {
+   typedef long long atomic_type;
+@@ -15443,7 +15444,7 @@ $as_echo "$as_me: WARNING: Performance of certain classes will degrade as a resu
+   # unnecessary for this test.
+ 
+     cat > conftest.$ac_ext << EOF
+-#line 15446 "configure"
++#line 15447 "configure"
+ int main()
+ {
+   _Decimal32 d1;
+@@ -59087,6 +59088,7 @@ $as_echo "$version_specific_libs" >&6; }
+   fi
+ 
+   # Version-specific runtime libs processing.
++  glibcxx_dllbindir='$(glibcxx_toolexeclibdir)'
+   if test $version_specific_libs = yes; then
+     # Need the gcc compiler version to know where to install libraries
+     # and header files if --enable-version-specific-runtime-libs option
+@@ -59112,7 +59114,12 @@ $as_echo "$version_specific_libs" >&6; }
+     fi
+     multi_os_directory=`$CXX -print-multi-os-directory`
+     case $multi_os_directory in
+-      .) ;; # Avoid trailing /.
++      .)
++        if test -z "$with_cross_host" ||
++           test x"$with_cross_host" = x"no"; then
++          glibcxx_dllbindir='$(bindir)'
++        fi
++        ;; # Avoid trailing /.
+       *) glibcxx_toolexeclibdir=$glibcxx_toolexeclibdir/$multi_os_directory ;;
+     esac
+   fi
+@@ -59128,6 +59135,7 @@ $as_echo "$gxx_include_dir" >&6; }
+ 
+ 
+ 
++
+ # Export all the include and flag information to Makefiles.
+ 
+   # Used for every C++ compile we perform.
+diff --git a/libstdc++-v3/configure.host b/libstdc++-v3/configure.host
+index 02292b0..d34ba3f 100644
+--- a/libstdc++-v3/configure.host
++++ b/libstdc++-v3/configure.host
+@@ -209,7 +209,7 @@ case "${host_os}" in
+     ;;
+   cygwin*)
+     os_include_dir="os/newlib"
+-    OPT_LDFLAGS="${OPT_LDFLAGS} -no-undefined -bindir \$(bindir)"
++    OPT_LDFLAGS="${OPT_LDFLAGS} -no-undefined -bindir \$(dllbindir)"
+     ;;
+   darwin | darwin[1-7] | darwin[1-7].*)
+     # On Darwin, performance is improved if libstdc++ is single-module.
+@@ -259,7 +259,7 @@ case "${host_os}" in
+   mingw32*)
+     os_include_dir="os/mingw32"
+     error_constants_dir="os/mingw32"
+-    OPT_LDFLAGS="${OPT_LDFLAGS} -no-undefined -bindir \$(bindir)"
++    OPT_LDFLAGS="${OPT_LDFLAGS} -no-undefined -bindir \$(dllbindir)"
+     ;;
+   netbsd*)
+     os_include_dir="os/bsd/netbsd"
+diff --git a/libstdc++-v3/doc/Makefile.in b/libstdc++-v3/doc/Makefile.in
+index 408961e..447c900 100644
+--- a/libstdc++-v3/doc/Makefile.in
++++ b/libstdc++-v3/doc/Makefile.in
+@@ -198,6 +198,7 @@ glibcxx_MOFILES = @glibcxx_MOFILES@
+ glibcxx_PCHFLAGS = @glibcxx_PCHFLAGS@
+ glibcxx_POFILES = @glibcxx_POFILES@
+ glibcxx_builddir = @glibcxx_builddir@
++glibcxx_dllbindir = @glibcxx_dllbindir@
+ glibcxx_localedir = @glibcxx_localedir@
+ glibcxx_prefixdir = @glibcxx_prefixdir@
+ glibcxx_srcdir = @glibcxx_srcdir@
+@@ -250,6 +251,7 @@ PWD_COMMAND = $${PWDCMD-pwd}
+ STAMP = echo timestamp >
+ toolexecdir = $(glibcxx_toolexecdir)
+ toolexeclibdir = $(glibcxx_toolexeclibdir)
++dllbindir = $(glibcxx_dllbindir)
+ 
+ # These bits are all figured out from configure.  Look in acinclude.m4
+ # or configure.ac to see how they are set.  See GLIBCXX_EXPORT_FLAGS.
+diff --git a/libstdc++-v3/fragment.am b/libstdc++-v3/fragment.am
+index d2065dc..a4dabc6 100644
+--- a/libstdc++-v3/fragment.am
++++ b/libstdc++-v3/fragment.am
+@@ -12,6 +12,7 @@ STAMP = echo timestamp >
+ 
+ toolexecdir = $(glibcxx_toolexecdir)
+ toolexeclibdir = $(glibcxx_toolexeclibdir)
++dllbindir = $(glibcxx_dllbindir)
+ 
+ # These bits are all figured out from configure.  Look in acinclude.m4
+ # or configure.ac to see how they are set.  See GLIBCXX_EXPORT_FLAGS.
+diff --git a/libstdc++-v3/include/Makefile.in b/libstdc++-v3/include/Makefile.in
+index 9caf459..0d5886a 100644
+--- a/libstdc++-v3/include/Makefile.in
++++ b/libstdc++-v3/include/Makefile.in
+@@ -200,6 +200,7 @@ glibcxx_MOFILES = @glibcxx_MOFILES@
+ glibcxx_PCHFLAGS = @glibcxx_PCHFLAGS@
+ glibcxx_POFILES = @glibcxx_POFILES@
+ glibcxx_builddir = @glibcxx_builddir@
++glibcxx_dllbindir = @glibcxx_dllbindir@
+ glibcxx_localedir = @glibcxx_localedir@
+ glibcxx_prefixdir = @glibcxx_prefixdir@
+ glibcxx_srcdir = @glibcxx_srcdir@
+@@ -252,6 +253,7 @@ PWD_COMMAND = $${PWDCMD-pwd}
+ STAMP = echo timestamp >
+ toolexecdir = $(glibcxx_toolexecdir)
+ toolexeclibdir = $(glibcxx_toolexeclibdir)
++dllbindir = $(glibcxx_dllbindir)
+ 
+ # These bits are all figured out from configure.  Look in acinclude.m4
+ # or configure.ac to see how they are set.  See GLIBCXX_EXPORT_FLAGS.
+diff --git a/libstdc++-v3/libsupc++/Makefile.in b/libstdc++-v3/libsupc++/Makefile.in
+index a535d49..fa7bdc9 100644
+--- a/libstdc++-v3/libsupc++/Makefile.in
++++ b/libstdc++-v3/libsupc++/Makefile.in
+@@ -282,6 +282,7 @@ glibcxx_MOFILES = @glibcxx_MOFILES@
+ glibcxx_PCHFLAGS = @glibcxx_PCHFLAGS@
+ glibcxx_POFILES = @glibcxx_POFILES@
+ glibcxx_builddir = @glibcxx_builddir@
++glibcxx_dllbindir = @glibcxx_dllbindir@
+ glibcxx_localedir = @glibcxx_localedir@
+ glibcxx_prefixdir = @glibcxx_prefixdir@
+ glibcxx_srcdir = @glibcxx_srcdir@
+@@ -334,6 +335,7 @@ PWD_COMMAND = $${PWDCMD-pwd}
+ STAMP = echo timestamp >
+ toolexecdir = $(glibcxx_toolexecdir)
+ toolexeclibdir = $(glibcxx_toolexeclibdir)
++dllbindir = $(glibcxx_dllbindir)
+ 
+ # These bits are all figured out from configure.  Look in acinclude.m4
+ # or configure.ac to see how they are set.  See GLIBCXX_EXPORT_FLAGS.
+diff --git a/libstdc++-v3/po/Makefile.in b/libstdc++-v3/po/Makefile.in
+index 871bb37..adf2e76 100644
+--- a/libstdc++-v3/po/Makefile.in
++++ b/libstdc++-v3/po/Makefile.in
+@@ -198,6 +198,7 @@ glibcxx_MOFILES = @glibcxx_MOFILES@
+ glibcxx_PCHFLAGS = @glibcxx_PCHFLAGS@
+ glibcxx_POFILES = @glibcxx_POFILES@
+ glibcxx_builddir = @glibcxx_builddir@
++glibcxx_dllbindir = @glibcxx_dllbindir@
+ glibcxx_localedir = @glibcxx_localedir@
+ glibcxx_prefixdir = @glibcxx_prefixdir@
+ glibcxx_srcdir = @glibcxx_srcdir@
+@@ -250,6 +251,7 @@ PWD_COMMAND = $${PWDCMD-pwd}
+ STAMP = echo timestamp >
+ toolexecdir = $(glibcxx_toolexecdir)
+ toolexeclibdir = $(glibcxx_toolexeclibdir)
++dllbindir = $(glibcxx_dllbindir)
+ 
+ # These bits are all figured out from configure.  Look in acinclude.m4
+ # or configure.ac to see how they are set.  See GLIBCXX_EXPORT_FLAGS.
+diff --git a/libstdc++-v3/python/Makefile.in b/libstdc++-v3/python/Makefile.in
+index 683d798..baf4ef1 100644
+--- a/libstdc++-v3/python/Makefile.in
++++ b/libstdc++-v3/python/Makefile.in
+@@ -222,6 +222,7 @@ glibcxx_MOFILES = @glibcxx_MOFILES@
+ glibcxx_PCHFLAGS = @glibcxx_PCHFLAGS@
+ glibcxx_POFILES = @glibcxx_POFILES@
+ glibcxx_builddir = @glibcxx_builddir@
++glibcxx_dllbindir = @glibcxx_dllbindir@
+ glibcxx_localedir = @glibcxx_localedir@
+ glibcxx_prefixdir = @glibcxx_prefixdir@
+ glibcxx_srcdir = @glibcxx_srcdir@
+@@ -274,6 +275,7 @@ PWD_COMMAND = $${PWDCMD-pwd}
+ STAMP = echo timestamp >
+ toolexecdir = $(glibcxx_toolexecdir)
+ toolexeclibdir = $(glibcxx_toolexeclibdir)
++dllbindir = $(glibcxx_dllbindir)
+ 
+ # These bits are all figured out from configure.  Look in acinclude.m4
+ # or configure.ac to see how they are set.  See GLIBCXX_EXPORT_FLAGS.
+diff --git a/libstdc++-v3/src/Makefile.in b/libstdc++-v3/src/Makefile.in
+index 39cb22c..d83dce9 100644
+--- a/libstdc++-v3/src/Makefile.in
++++ b/libstdc++-v3/src/Makefile.in
+@@ -277,6 +277,7 @@ glibcxx_MOFILES = @glibcxx_MOFILES@
+ glibcxx_PCHFLAGS = @glibcxx_PCHFLAGS@
+ glibcxx_POFILES = @glibcxx_POFILES@
+ glibcxx_builddir = @glibcxx_builddir@
++glibcxx_dllbindir = @glibcxx_dllbindir@
+ glibcxx_localedir = @glibcxx_localedir@
+ glibcxx_prefixdir = @glibcxx_prefixdir@
+ glibcxx_srcdir = @glibcxx_srcdir@
+@@ -329,6 +330,7 @@ PWD_COMMAND = $${PWDCMD-pwd}
+ STAMP = echo timestamp >
+ toolexecdir = $(glibcxx_toolexecdir)
+ toolexeclibdir = $(glibcxx_toolexeclibdir)
++dllbindir = $(glibcxx_dllbindir)
+ 
+ # These bits are all figured out from configure.  Look in acinclude.m4
+ # or configure.ac to see how they are set.  See GLIBCXX_EXPORT_FLAGS.
+diff --git a/libstdc++-v3/testsuite/Makefile.in b/libstdc++-v3/testsuite/Makefile.in
+index 72a40c8..698a22a 100644
+--- a/libstdc++-v3/testsuite/Makefile.in
++++ b/libstdc++-v3/testsuite/Makefile.in
+@@ -198,6 +198,7 @@ glibcxx_MOFILES = @glibcxx_MOFILES@
+ glibcxx_PCHFLAGS = @glibcxx_PCHFLAGS@
+ glibcxx_POFILES = @glibcxx_POFILES@
+ glibcxx_builddir = @glibcxx_builddir@
++glibcxx_dllbindir = @glibcxx_dllbindir@
+ glibcxx_localedir = @glibcxx_localedir@
+ glibcxx_prefixdir = @glibcxx_prefixdir@
+ glibcxx_srcdir = @glibcxx_srcdir@
+@@ -253,6 +254,7 @@ PWD_COMMAND = $${PWDCMD-pwd}
+ STAMP = echo timestamp >
+ toolexecdir = $(glibcxx_toolexecdir)
+ toolexeclibdir = $(glibcxx_toolexeclibdir)
++dllbindir = $(glibcxx_dllbindir)
+ 
+ # These bits are all figured out from configure.  Look in acinclude.m4
+ # or configure.ac to see how they are set.  See GLIBCXX_EXPORT_FLAGS.
+-- 
+1.7.0.3.254.g4503b
+

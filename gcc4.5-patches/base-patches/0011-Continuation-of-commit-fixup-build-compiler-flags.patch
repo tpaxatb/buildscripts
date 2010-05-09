@@ -1,0 +1,32 @@
+From 4943888ef218685f0dfda41bbdb936df812c17da Mon Sep 17 00:00:00 2001
+From: Doug Semler <dougsemler@gmail.com>
+Date: Sat, 8 May 2010 17:32:22 -0400
+Subject: [PATCH 11/12] Continuation of commit fixup build compiler flags.
+
+Mingw-64 currently has build compiler flags that search for files
+during the build in hard coded locations.  This is not clean, and
+also gets in the way during (canadian-) cross builds.  A better
+way to handle these flags is to use --with-build-sysroot at
+configure time over hardcoding these in the configure system.
+
+gcc/ChangeLog:
+
+	* config/i386/t-mingw-w32: Override LIBGCC2_INCLUDES to
+          remove including of winsup subdirectory.
+---
+ gcc/config/i386/t-mingw-w32 |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/gcc/config/i386/t-mingw-w32 b/gcc/config/i386/t-mingw-w32
+index 62d6330..0c7397a 100644
+--- a/gcc/config/i386/t-mingw-w32
++++ b/gcc/config/i386/t-mingw-w32
+@@ -10,3 +10,5 @@ SHLIB_LC = -lmingw32 -lmingwex -lmoldname -lmsvcrt -luser32 -lkernel32 -ladvapi3
+ 
+ LIBGCC = stmp-multilib
+ INSTALL_LIBGCC = install-multilib
++
++LIBGCC2_INCLUDES =
+-- 
+1.7.0.3.254.g4503b
+

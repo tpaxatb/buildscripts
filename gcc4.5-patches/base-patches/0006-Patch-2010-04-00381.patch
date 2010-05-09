@@ -1,7 +1,7 @@
-From 7d4c582f5bcf4e2bb7907e1ccb23cbee8ac4e2c4 Mon Sep 17 00:00:00 2001
+From 1ffb844c78b7ac6f26ea2816e73848d160d388cc Mon Sep 17 00:00:00 2001
 From: Ozkan Sezer <sezeroz@gmail.com>
 Date: Tue, 4 May 2010 09:27:52 -0400
-Subject: [PATCH 6/8] Patch http://gcc.gnu.org/ml/gcc-patches/2010-04/msg00381.html
+Subject: [PATCH 06/12] Patch http://gcc.gnu.org/ml/gcc-patches/2010-04/msg00381.html
 
 gcc/ada/gsocket.h includes windows.h before winsock2.h which leads to
 clashing definitions with winsock.h included from within windows.h, at
