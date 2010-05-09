@@ -1,0 +1,29 @@
+042b8d7aabcfcf40f21edcbf0cad3e5a5dbf660d
+diff --cc libobjc/configure
+index af4a6b4,3882565..b6c9109
+--- a/libobjc/configure
++++ b/libobjc/configure
+@@@ -3323,7 -3334,7 +3334,7 @@@ case "${host}" i
+      ;;
+    *-cygwin*|*-mingw*)
+      # Tell libtool to build DLLs on Windows
+-     extra_ldflags_libobjc='-no-undefined -bindir $(bindir) -export-symbols $(srcdir)/libobjc.def -Xcompiler -shared-libgcc'
+ -    extra_ldflags_libobjc='-no-undefined -bindir $(dllbindir)'
+++    extra_ldflags_libobjc='-no-undefined -bindir $(dllbindir) -export-symbols $(srcdir)/libobjc.def -Xcompiler -shared-libgcc'
+      ;;
+  esac
+  
+diff --cc libobjc/configure.ac
+index 972c377,b3c0006..ec3e2c7
+--- a/libobjc/configure.ac
++++ b/libobjc/configure.ac
+@@@ -163,7 -173,7 +173,7 @@@ case "${host}" i
+      ;;
+    *-cygwin*|*-mingw*)
+      # Tell libtool to build DLLs on Windows
+-     extra_ldflags_libobjc='-no-undefined -bindir $(bindir) -export-symbols $(srcdir)/libobjc.def -Xcompiler -shared-libgcc'
+ -    extra_ldflags_libobjc='-no-undefined -bindir $(dllbindir)'
+++    extra_ldflags_libobjc='-no-undefined -bindir $(dllbindir) -export-symbols $(srcdir)/libobjc.def -Xcompiler -shared-libgcc'
+      ;;
+  esac
+  AC_SUBST(extra_ldflags_libobjc)
