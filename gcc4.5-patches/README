@@ -1,0 +1,17 @@
+These patches are semi-organized as branches off the gcc 4.5 trunk.
+
+base-patches contains patches that are basically fixes and patches gleaned
+from the mailing lists, plus a few other patches of mine.  They should
+apply cleanly in order from the svn gcc-4_5-branch.
+
+dll-locations contains patches that are experimental for installing the
+runtime DLLs based on the type of compiler being installed.  It is
+experimental in the sense that it may not work, it is incomplete, and
+it may break 32 bit mingw and/or cygwin builds.  These again should
+apply cleanly in order from the svn gcc-4_5-branch.
+
+Also included are merge conflict resolution diffs.  They will
+track merge conflicts that occur as patches are added to the branches.
+
+For information about each patch, read the patch itself, as that has
+the most information (contains the commit log).
