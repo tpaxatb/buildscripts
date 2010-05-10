@@ -1,7 +1,7 @@
-From 9c2aaf05854f6b8b130ddd63f31990f6b6855e28 Mon Sep 17 00:00:00 2001
+From ba7edc1785914c12e66f971914a754916d5d9dde Mon Sep 17 00:00:00 2001
 From: Doug Semler <dougsemler@gmail.com>
 Date: Sat, 8 May 2010 23:10:49 -0400
-Subject: [PATCH 2/2] Fix installation of DLLs - part 1.
+Subject: [PATCH] Fix installation of DLLs - part 1.
 
 This patch installs DLL files into more appropriate directories
 for mingw/cygwin.
@@ -47,6 +47,7 @@ libjava/ChangeLog:
 libobjc/ChangeLog:
 	* configure.ac: Set dllbindir to appropriate location.
 	  Install into new dllbindir location.
+	* Makefile.in: Install into new dllbindir location.
 	* configure: Regenerate.
 
 libssp/ChangeLog:
@@ -85,6 +86,7 @@ libstdc++-v3/ChangeLog:
  libjava/gcj/Makefile.in            |    1 +
  libjava/include/Makefile.in        |    1 +
  libjava/testsuite/Makefile.in      |    1 +
+ libobjc/Makefile.in                |    2 ++
  libobjc/configure                  |   21 ++++++++++++++++-----
  libobjc/configure.ac               |   14 ++++++++++++--
  libssp/Makefile.am                 |    2 +-
@@ -103,7 +105,7 @@ libstdc++-v3/ChangeLog:
  libstdc++-v3/python/Makefile.in    |    2 ++
  libstdc++-v3/src/Makefile.in       |    2 ++
  libstdc++-v3/testsuite/Makefile.in |    2 ++
- 34 files changed, 191 insertions(+), 43 deletions(-)
+ 35 files changed, 193 insertions(+), 43 deletions(-)
 
 diff --git a/libgfortran/Makefile.am b/libgfortran/Makefile.am
 index bd767a2..e01e523 100644
@@ -555,6 +557,19 @@ index fc1db70..768744f 100644
  docdir = @docdir@
  dvidir = @dvidir@
  exec_prefix = @exec_prefix@
+diff --git a/libobjc/Makefile.in b/libobjc/Makefile.in
+index 71faf8a..7626f82 100644
+--- a/libobjc/Makefile.in
++++ b/libobjc/Makefile.in
+@@ -39,6 +39,8 @@ multi_basedir = @multi_basedir@
+ toolexecdir = @toolexecdir@
+ # Toolexecdir is used only by toolexeclibdir
+ toolexeclibdir = @toolexeclibdir@
++# dllbindir only used for cygwin/mingw compiles
++dllbindir = @dllbindir@
+ 
+ includedirname = @includedirname@
+ libsuffix = @libsuffix@
 diff --git a/libobjc/configure b/libobjc/configure
 index 1dfcb31..3882565 100755
 --- a/libobjc/configure
