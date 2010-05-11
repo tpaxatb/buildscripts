@@ -1,4 +1,4 @@
-From ba7edc1785914c12e66f971914a754916d5d9dde Mon Sep 17 00:00:00 2001
+From 6c3b53aa3e8a5fe2ac7e96562a5895d36341d748 Mon Sep 17 00:00:00 2001
 From: Doug Semler <dougsemler@gmail.com>
 Date: Sat, 8 May 2010 23:10:49 -0400
 Subject: [PATCH] Fix installation of DLLs - part 1.
@@ -72,30 +72,30 @@ libstdc++-v3/ChangeLog:
 ---
  libgfortran/Makefile.am            |    2 +-
  libgfortran/Makefile.in            |    3 ++-
- libgfortran/configure              |   17 ++++++++++++++---
- libgfortran/configure.ac           |   12 +++++++++++-
+ libgfortran/configure              |   14 ++++++++++++--
+ libgfortran/configure.ac           |    9 +++++++++
  libgomp/Makefile.am                |    2 +-
  libgomp/Makefile.in                |    3 ++-
- libgomp/configure                  |   17 ++++++++++++++---
- libgomp/configure.ac               |   12 +++++++++++-
+ libgomp/configure                  |   14 ++++++++++++--
+ libgomp/configure.ac               |    9 +++++++++
  libgomp/testsuite/Makefile.in      |    1 +
  libjava/Makefile.in                |    1 +
- libjava/configure                  |   20 ++++++++++++++++----
- libjava/configure.ac               |   13 ++++++++++++-
+ libjava/configure                  |   16 +++++++++++++---
+ libjava/configure.ac               |    9 +++++++++
  libjava/configure.host             |    2 +-
  libjava/gcj/Makefile.in            |    1 +
  libjava/include/Makefile.in        |    1 +
  libjava/testsuite/Makefile.in      |    1 +
  libobjc/Makefile.in                |    2 ++
- libobjc/configure                  |   21 ++++++++++++++++-----
- libobjc/configure.ac               |   14 ++++++++++++--
+ libobjc/configure                  |   18 ++++++++++++++----
+ libobjc/configure.ac               |   11 ++++++++++-
  libssp/Makefile.am                 |    2 +-
  libssp/Makefile.in                 |    3 ++-
- libssp/configure                   |   17 ++++++++++++++---
- libssp/configure.ac                |   12 +++++++++++-
+ libssp/configure                   |   14 ++++++++++++--
+ libssp/configure.ac                |    9 +++++++++
  libstdc++-v3/Makefile.in           |    2 ++
- libstdc++-v3/acinclude.m4          |   10 +++++++++-
- libstdc++-v3/configure             |   26 +++++++++++++++++---------
+ libstdc++-v3/acinclude.m4          |    7 +++++++
+ libstdc++-v3/configure             |   23 +++++++++++++++--------
  libstdc++-v3/configure.host        |    4 ++--
  libstdc++-v3/doc/Makefile.in       |    2 ++
  libstdc++-v3/fragment.am           |    1 +
@@ -105,7 +105,7 @@ libstdc++-v3/ChangeLog:
  libstdc++-v3/python/Makefile.in    |    2 ++
  libstdc++-v3/src/Makefile.in       |    2 ++
  libstdc++-v3/testsuite/Makefile.in |    2 ++
- 35 files changed, 193 insertions(+), 43 deletions(-)
+ 35 files changed, 167 insertions(+), 31 deletions(-)
 
 diff --git a/libgfortran/Makefile.am b/libgfortran/Makefile.am
 index bd767a2..e01e523 100644
@@ -142,7 +142,7 @@ index 02e93b1..4e02686 100644
  toolexeclib_LTLIBRARIES = libgfortran.la
  libgfortran_la_LINK = $(LINK) $(libgfortran_la_LDFLAGS)
 diff --git a/libgfortran/configure b/libgfortran/configure
-index 46e0863..b18b151 100755
+index 46e0863..f0507e1 100755
 --- a/libgfortran/configure
 +++ b/libgfortran/configure
 @@ -650,6 +650,7 @@ CPPFLAGS
@@ -164,21 +164,18 @@ index 46e0863..b18b151 100755
  case ${version_specific_libs} in
    yes)
      # Need the gcc compiler version to know where to install libraries
-@@ -3395,7 +3400,12 @@ case ${version_specific_libs} in
+@@ -3392,6 +3397,10 @@ case ${version_specific_libs} in
+     else
+       toolexecdir='$(libdir)/gcc-lib/$(target_alias)'
+       toolexeclibdir='$(libdir)'
++      multi_os_directory=`$CC -print-multi-directory`
++      if test x"$multi_os_directory" = x"."; then
++        dllbindir='$(bindir)'
++      fi
      fi
      multi_os_directory=`$CC -print-multi-os-directory`
      case $multi_os_directory in
--      .) ;; # Avoid trailing /.
-+      .)
-+        if test -z "$with_cross_host" ||
-+           test x"$with_cross_host" = x"no"; then
-+          dllbindir='$(bindir)'
-+        fi
-+        ;; # Avoid trailing /.
-       *) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
-     esac
-     ;;
-@@ -3403,6 +3413,7 @@ esac
+@@ -3403,6 +3412,7 @@ esac
  
  
  
@@ -186,26 +183,26 @@ index 46e0863..b18b151 100755
  # Check the compiler.
  # The same as in boehm-gc and libstdc++. Have to borrow it from there.
  # We must force CC to /not/ be precious variables; otherwise
-@@ -11306,7 +11317,7 @@ else
+@@ -11306,7 +11316,7 @@ else
    lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
    lt_status=$lt_dlunknown
    cat > conftest.$ac_ext <<_LT_EOF
 -#line 11309 "configure"
-+#line 11320 "configure"
++#line 11319 "configure"
  #include "confdefs.h"
  
  #if HAVE_DLFCN_H
-@@ -11412,7 +11423,7 @@ else
+@@ -11412,7 +11422,7 @@ else
    lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
    lt_status=$lt_dlunknown
    cat > conftest.$ac_ext <<_LT_EOF
 -#line 11415 "configure"
-+#line 11426 "configure"
++#line 11425 "configure"
  #include "confdefs.h"
  
  #if HAVE_DLFCN_H
 diff --git a/libgfortran/configure.ac b/libgfortran/configure.ac
-index 104f2c1..bc5a97c 100644
+index 104f2c1..7f47833 100644
 --- a/libgfortran/configure.ac
 +++ b/libgfortran/configure.ac
 @@ -82,6 +82,10 @@ fi
@@ -219,20 +216,18 @@ index 104f2c1..bc5a97c 100644
  case ${version_specific_libs} in
    yes)
      # Need the gcc compiler version to know where to install libraries
-@@ -102,13 +106,19 @@ case ${version_specific_libs} in
+@@ -99,6 +103,10 @@ case ${version_specific_libs} in
+     else
+       toolexecdir='$(libdir)/gcc-lib/$(target_alias)'
+       toolexeclibdir='$(libdir)'
++      multi_os_directory=`$CC -print-multi-directory`
++      if test x"$multi_os_directory" = x"."; then
++        dllbindir='$(bindir)'
++      fi
      fi
      multi_os_directory=`$CC -print-multi-os-directory`
      case $multi_os_directory in
--      .) ;; # Avoid trailing /.
-+      .)
-+        if test -z "$with_cross_host" ||
-+           test x"$with_cross_host" = x"no"; then
-+          dllbindir='$(bindir)'
-+        fi
-+        ;; # Avoid trailing /.
-       *) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
-     esac
-     ;;
+@@ -109,6 +117,7 @@ case ${version_specific_libs} in
  esac
  AC_SUBST(toolexecdir)
  AC_SUBST(toolexeclibdir)
@@ -275,7 +270,7 @@ index a972b4e..97394ce 100644
  libgomp_la_LINK = $(LINK) $(libgomp_la_LDFLAGS)
  libgomp_la_SOURCES = alloc.c barrier.c critical.c env.c error.c iter.c \
 diff --git a/libgomp/configure b/libgomp/configure
-index d2018b8..5ca053b 100755
+index d2018b8..b276f74 100755
 --- a/libgomp/configure
 +++ b/libgomp/configure
 @@ -670,6 +670,7 @@ CPPFLAGS
@@ -297,21 +292,18 @@ index d2018b8..5ca053b 100755
  case ${enable_version_specific_runtime_libs} in
    yes)
      # Need the gcc compiler version to know where to install libraries
-@@ -3295,7 +3300,12 @@ case ${enable_version_specific_runtime_libs} in
+@@ -3292,6 +3297,10 @@ case ${enable_version_specific_runtime_libs} in
+     else
+       toolexecdir='$(libdir)/gcc-lib/$(target_alias)'
+       toolexeclibdir='$(libdir)'
++      multi_os_directory=`$CC -print-multi-directory`
++      if test x"$multi_os_directory" = x"."; then
++        dllbindir='$(bindir)'
++      fi
      fi
      multi_os_directory=`$CC -print-multi-os-directory`
      case $multi_os_directory in
--      .) ;; # Avoid trailing /.
-+      .)
-+        if test -z "$with_cross_host" ||
-+           test x"$with_cross_host" = x"no"; then
-+          dllbindir='$(bindir)'
-+        fi
-+        ;; # Avoid trailing /.
-       *) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
-     esac
-     ;;
-@@ -3303,6 +3313,7 @@ esac
+@@ -3303,6 +3312,7 @@ esac
  
  
  
@@ -319,26 +311,26 @@ index d2018b8..5ca053b 100755
  # Check the compiler.
  # The same as in boehm-gc and libstdc++. Have to borrow it from there.
  # We must force CC to /not/ be precious variables; otherwise
-@@ -11082,7 +11093,7 @@ else
+@@ -11082,7 +11092,7 @@ else
    lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
    lt_status=$lt_dlunknown
    cat > conftest.$ac_ext <<_LT_EOF
 -#line 11085 "configure"
-+#line 11096 "configure"
++#line 11095 "configure"
  #include "confdefs.h"
  
  #if HAVE_DLFCN_H
-@@ -11188,7 +11199,7 @@ else
+@@ -11188,7 +11198,7 @@ else
    lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
    lt_status=$lt_dlunknown
    cat > conftest.$ac_ext <<_LT_EOF
 -#line 11191 "configure"
-+#line 11202 "configure"
++#line 11201 "configure"
  #include "confdefs.h"
  
  #if HAVE_DLFCN_H
 diff --git a/libgomp/configure.ac b/libgomp/configure.ac
-index fefffe9..e591271 100644
+index fefffe9..3e51ba6 100644
 --- a/libgomp/configure.ac
 +++ b/libgomp/configure.ac
 @@ -66,6 +66,10 @@ AM_ENABLE_MULTILIB(, ..)
@@ -352,20 +344,18 @@ index fefffe9..e591271 100644
  case ${enable_version_specific_runtime_libs} in
    yes)
      # Need the gcc compiler version to know where to install libraries
-@@ -86,13 +90,19 @@ case ${enable_version_specific_runtime_libs} in
+@@ -83,6 +87,10 @@ case ${enable_version_specific_runtime_libs} in
+     else
+       toolexecdir='$(libdir)/gcc-lib/$(target_alias)'
+       toolexeclibdir='$(libdir)'
++      multi_os_directory=`$CC -print-multi-directory`
++      if test x"$multi_os_directory" = x"."; then
++        dllbindir='$(bindir)'
++      fi
      fi
      multi_os_directory=`$CC -print-multi-os-directory`
      case $multi_os_directory in
--      .) ;; # Avoid trailing /.
-+      .)
-+        if test -z "$with_cross_host" ||
-+           test x"$with_cross_host" = x"no"; then
-+          dllbindir='$(bindir)'
-+        fi
-+        ;; # Avoid trailing /.
-       *) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
-     esac
-     ;;
+@@ -93,6 +101,7 @@ case ${enable_version_specific_runtime_libs} in
  esac
  AC_SUBST(toolexecdir)
  AC_SUBST(toolexeclibdir)
@@ -398,7 +388,7 @@ index ed3b23b..c743ea0 100644
  dvidir = @dvidir@
  exec_prefix = @exec_prefix@
 diff --git a/libjava/configure b/libjava/configure
-index d97f7d0..25eadca 100755
+index d97f7d0..4803973 100755
 --- a/libjava/configure
 +++ b/libjava/configure
 @@ -640,6 +640,7 @@ gxx_include_dir
@@ -447,22 +437,18 @@ index d97f7d0..25eadca 100755
  case ${version_specific_libs} in
    yes)
      # Need the gcc compiler version to know where to install libraries
-@@ -23729,7 +23734,13 @@ case ${version_specific_libs} in
+@@ -23726,6 +23731,10 @@ case ${version_specific_libs} in
+     else
+       toolexecdir='$(libdir)/gcc-lib/$(target_noncanonical)'
+       toolexecmainlibdir='$(libdir)'
++      multi_os_directory=`$CC -print-multi-directory`
++      if test x"$multi_os_directory" = x"."; then
++        dllbindir='$(bindir)'
++      fi
      fi
      multi_os_directory=`$CC -print-multi-os-directory`
      case $multi_os_directory in
--      .) toolexeclibdir=$toolexecmainlibdir ;; # Avoid trailing /.
-+      .)
-+        if test -z "$with_cross_host" ||
-+           test x"$with_cross_host" = x"no"; then
-+          dllbindir='$(bindir)'
-+        fi
-+        toolexeclibdir=$toolexecmainlibdir
-+        ;; # Avoid trailing /.
-       *) toolexeclibdir=$toolexecmainlibdir/$multi_os_directory ;;
-     esac
-     ;;
-@@ -23738,6 +23749,7 @@ esac
+@@ -23738,6 +23747,7 @@ esac
  
  
  
@@ -471,7 +457,7 @@ index d97f7d0..25eadca 100755
  gcjversion=`cat "$srcdir/../gcc/BASE-VER"`
  libgcj_soversion=`awk -F: '/^[^#].*:/ { print $1 }' $srcdir/libtool-version`
 diff --git a/libjava/configure.ac b/libjava/configure.ac
-index 7f4befa..193c21c 100644
+index 7f4befa..ff8b12d 100644
 --- a/libjava/configure.ac
 +++ b/libjava/configure.ac
 @@ -1510,6 +1510,10 @@ AC_SUBST(GCC_UNWIND_INCLUDE)
@@ -485,22 +471,18 @@ index 7f4befa..193c21c 100644
  case ${version_specific_libs} in
    yes)
      # Need the gcc compiler version to know where to install libraries
-@@ -1532,7 +1536,13 @@ case ${version_specific_libs} in
+@@ -1529,6 +1533,10 @@ case ${version_specific_libs} in
+     else
+       toolexecdir='$(libdir)/gcc-lib/$(target_noncanonical)'
+       toolexecmainlibdir='$(libdir)'
++      multi_os_directory=`$CC -print-multi-directory`
++      if test x"$multi_os_directory" = x"."; then
++        dllbindir='$(bindir)'
++      fi
      fi
      multi_os_directory=`$CC -print-multi-os-directory`
      case $multi_os_directory in
--      .) toolexeclibdir=$toolexecmainlibdir ;; # Avoid trailing /.
-+      .)
-+        if test -z "$with_cross_host" ||
-+           test x"$with_cross_host" = x"no"; then
-+          dllbindir='$(bindir)'
-+        fi
-+        toolexeclibdir=$toolexecmainlibdir
-+        ;; # Avoid trailing /.
-       *) toolexeclibdir=$toolexecmainlibdir/$multi_os_directory ;;
-     esac
-     ;;
-@@ -1540,6 +1550,7 @@ esac
+@@ -1540,6 +1548,7 @@ esac
  AC_SUBST(toolexecdir)
  AC_SUBST(toolexecmainlibdir)
  AC_SUBST(toolexeclibdir)
@@ -571,7 +553,7 @@ index 71faf8a..7626f82 100644
  includedirname = @includedirname@
  libsuffix = @libsuffix@
 diff --git a/libobjc/configure b/libobjc/configure
-index 1dfcb31..3882565 100755
+index 1dfcb31..8dc62ac 100755
 --- a/libobjc/configure
 +++ b/libobjc/configure
 @@ -640,6 +640,7 @@ CFLAGS
@@ -593,21 +575,18 @@ index 1dfcb31..3882565 100755
  case ${version_specific_libs} in
    yes)
      # Need the gcc compiler version to know where to install libraries
-@@ -2483,7 +2488,12 @@ case ${version_specific_libs} in
+@@ -2480,6 +2485,10 @@ case ${version_specific_libs} in
+     else
+       toolexecdir='$(libdir)/gcc-lib/$(target_noncanonical)'
+       toolexeclibdir='$(libdir)'
++      multi_os_directory=`$CC -print-multi-directory`
++      if test x"$multi_os_directory" = x"."; then
++        dllbindir='$(bindir)'
++      fi
      fi
      multi_os_directory=`$CC -print-multi-os-directory`
      case $multi_os_directory in
--      .) ;; # Avoid trailing /.
-+      .)
-+        if test -z "$with_cross_host" ||
-+           test x"$with_cross_host" = x"no"; then
-+          dllbindir='$(bindir)'
-+        fi
-+        ;; # Avoid trailing /.
-       *) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
-     esac
-     ;;
-@@ -2491,6 +2501,7 @@ esac
+@@ -2491,6 +2500,7 @@ esac
  
  
  
@@ -615,7 +594,7 @@ index 1dfcb31..3882565 100755
  # Figure out if we want to name the include directory and the
  #  library name changes differently.
  includedirname=include
-@@ -3323,7 +3334,7 @@ case "${host}" in
+@@ -3323,7 +3333,7 @@ case "${host}" in
      ;;
    *-cygwin*|*-mingw*)
      # Tell libtool to build DLLs on Windows
@@ -624,35 +603,35 @@ index 1dfcb31..3882565 100755
      ;;
  esac
  
-@@ -10566,7 +10577,7 @@ else
+@@ -10566,7 +10576,7 @@ else
    lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
    lt_status=$lt_dlunknown
    cat > conftest.$ac_ext <<_LT_EOF
 -#line 10569 "configure"
-+#line 10580 "configure"
++#line 10579 "configure"
  #include "confdefs.h"
  
  #if HAVE_DLFCN_H
-@@ -10672,7 +10683,7 @@ else
+@@ -10672,7 +10682,7 @@ else
    lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
    lt_status=$lt_dlunknown
    cat > conftest.$ac_ext <<_LT_EOF
 -#line 10675 "configure"
-+#line 10686 "configure"
++#line 10685 "configure"
  #include "confdefs.h"
  
  #if HAVE_DLFCN_H
-@@ -11246,7 +11257,7 @@ if test "${enable_sjlj_exceptions+set}" = set; then :
+@@ -11246,7 +11256,7 @@ if test "${enable_sjlj_exceptions+set}" = set; then :
    enableval=$enable_sjlj_exceptions; :
  else
    cat > conftest.$ac_ext << EOF
 -#line 11249 "configure"
-+#line 11260 "configure"
++#line 11259 "configure"
  @interface Frob
  @end
  @implementation Frob
 diff --git a/libobjc/configure.ac b/libobjc/configure.ac
-index 8820edc..b3c0006 100644
+index 8820edc..d259cab 100644
 --- a/libobjc/configure.ac
 +++ b/libobjc/configure.ac
 @@ -97,6 +97,10 @@ AC_SUBST(glibcpp_srcdir)
@@ -666,20 +645,18 @@ index 8820edc..b3c0006 100644
  case ${version_specific_libs} in
    yes)
      # Need the gcc compiler version to know where to install libraries
-@@ -117,13 +121,19 @@ case ${version_specific_libs} in
+@@ -114,6 +118,10 @@ case ${version_specific_libs} in
+     else
+       toolexecdir='$(libdir)/gcc-lib/$(target_noncanonical)'
+       toolexeclibdir='$(libdir)'
++      multi_os_directory=`$CC -print-multi-directory`
++      if test x"$multi_os_directory" = x"."; then
++        dllbindir='$(bindir)'
++      fi
      fi
      multi_os_directory=`$CC -print-multi-os-directory`
      case $multi_os_directory in
--      .) ;; # Avoid trailing /.
-+      .)
-+        if test -z "$with_cross_host" ||
-+           test x"$with_cross_host" = x"no"; then
-+          dllbindir='$(bindir)'
-+        fi
-+        ;; # Avoid trailing /.
-       *) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
-     esac
-     ;;
+@@ -124,6 +132,7 @@ case ${version_specific_libs} in
  esac
  AC_SUBST(toolexecdir)
  AC_SUBST(toolexeclibdir)
@@ -687,7 +664,7 @@ index 8820edc..b3c0006 100644
  
  # Figure out if we want to name the include directory and the
  #  library name changes differently.
-@@ -163,7 +173,7 @@ case "${host}" in
+@@ -163,7 +172,7 @@ case "${host}" in
      ;;
    *-cygwin*|*-mingw*)
      # Tell libtool to build DLLs on Windows
@@ -731,7 +708,7 @@ index fc83109..6853a4c 100644
  libssp_nonshared_la_SOURCES = \
  	ssp-local.c
 diff --git a/libssp/configure b/libssp/configure
-index d5e8384..381b072 100755
+index d5e8384..3ac1969 100755
 --- a/libssp/configure
 +++ b/libssp/configure
 @@ -602,6 +602,7 @@ ac_subst_vars='am__EXEEXT_FALSE
@@ -771,21 +748,18 @@ index d5e8384..381b072 100755
  case ${version_specific_libs} in
    yes)
      # Need the gcc compiler version to know where to install libraries
-@@ -10959,7 +10964,12 @@ case ${version_specific_libs} in
+@@ -10956,6 +10961,10 @@ case ${version_specific_libs} in
+     else
+       toolexecdir='$(libdir)/gcc-lib/$(target_alias)'
+       toolexeclibdir='$(libdir)'
++      multi_os_directory=`$CC -print-multi-directory`
++      if test x"$multi_os_directory" = x"."; then
++        dllbindir='$(bindir)'
++      fi
      fi
      multi_os_directory=`$CC -print-multi-os-directory`
      case $multi_os_directory in
--      .) ;; # Avoid trailing /.
-+      .)
-+        if test -z "$with_cross_host" ||
-+           test x"$with_cross_host" = x"no"; then
-+          dllbindir='$(bindir)'
-+        fi
-+        ;; # Avoid trailing /.
-       *) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
-     esac
-     ;;
-@@ -10967,6 +10977,7 @@ esac
+@@ -10967,6 +10976,7 @@ esac
  
  
  
@@ -794,7 +768,7 @@ index d5e8384..381b072 100755
    multilib_arg="--enable-multilib"
  else
 diff --git a/libssp/configure.ac b/libssp/configure.ac
-index fae1057..b5953b5 100644
+index fae1057..1ca2df0 100644
 --- a/libssp/configure.ac
 +++ b/libssp/configure.ac
 @@ -136,6 +136,10 @@ AC_SUBST(enable_static)
@@ -808,20 +782,18 @@ index fae1057..b5953b5 100644
  case ${version_specific_libs} in
    yes)
      # Need the gcc compiler version to know where to install libraries
-@@ -156,13 +160,19 @@ case ${version_specific_libs} in
+@@ -153,6 +157,10 @@ case ${version_specific_libs} in
+     else
+       toolexecdir='$(libdir)/gcc-lib/$(target_alias)'
+       toolexeclibdir='$(libdir)'
++      multi_os_directory=`$CC -print-multi-directory`
++      if test x"$multi_os_directory" = x"."; then
++        dllbindir='$(bindir)'
++      fi
      fi
      multi_os_directory=`$CC -print-multi-os-directory`
      case $multi_os_directory in
--      .) ;; # Avoid trailing /.
-+      .)
-+        if test -z "$with_cross_host" ||
-+           test x"$with_cross_host" = x"no"; then
-+          dllbindir='$(bindir)'
-+        fi
-+        ;; # Avoid trailing /.
-       *) toolexeclibdir=$toolexeclibdir/$multi_os_directory ;;
-     esac
-     ;;
+@@ -163,6 +171,7 @@ case ${version_specific_libs} in
  esac
  AC_SUBST(toolexecdir)
  AC_SUBST(toolexeclibdir)
@@ -850,7 +822,7 @@ index ecfe02a..ac99f8e 100644
  # These bits are all figured out from configure.  Look in acinclude.m4
  # or configure.ac to see how they are set.  See GLIBCXX_EXPORT_FLAGS.
 diff --git a/libstdc++-v3/acinclude.m4 b/libstdc++-v3/acinclude.m4
-index 4bf1cbc..96076aa 100644
+index 4bf1cbc..d2dcad9 100644
 --- a/libstdc++-v3/acinclude.m4
 +++ b/libstdc++-v3/acinclude.m4
 @@ -672,6 +672,7 @@ dnl  gxx_install_dir
@@ -869,21 +841,18 @@ index 4bf1cbc..96076aa 100644
    if test $version_specific_libs = yes; then
      # Need the gcc compiler version to know where to install libraries
      # and header files if --enable-version-specific-runtime-libs option
-@@ -744,7 +746,12 @@ AC_DEFUN([GLIBCXX_EXPORT_INSTALL_INFO], [
+@@ -741,6 +743,10 @@ AC_DEFUN([GLIBCXX_EXPORT_INSTALL_INFO], [
+     else
+       glibcxx_toolexecdir='${libdir}/gcc/${host_alias}'
+       glibcxx_toolexeclibdir='${libdir}'
++      multi_os_directory=`$CXX -print-multi-directory`
++      if test x"$multi_os_directory" = x"."; then
++        glibcxx_dllbindir='$(bindir)'
++      fi
      fi
      multi_os_directory=`$CXX -print-multi-os-directory`
      case $multi_os_directory in
--      .) ;; # Avoid trailing /.
-+      .)
-+        if test -z "$with_cross_host" ||
-+           test x"$with_cross_host" = x"no"; then
-+          glibcxx_dllbindir='$(bindir)'
-+        fi
-+        ;; # Avoid trailing /.
-       *) glibcxx_toolexeclibdir=$glibcxx_toolexeclibdir/$multi_os_directory ;;
-     esac
-   fi
-@@ -756,6 +763,7 @@ AC_DEFUN([GLIBCXX_EXPORT_INSTALL_INFO], [
+@@ -756,6 +762,7 @@ AC_DEFUN([GLIBCXX_EXPORT_INSTALL_INFO], [
    AC_SUBST(gxx_include_dir)
    AC_SUBST(glibcxx_toolexecdir)
    AC_SUBST(glibcxx_toolexeclibdir)
@@ -892,7 +861,7 @@ index 4bf1cbc..96076aa 100644
  
  
 diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
-index 2bbb220..11a8a4d 100755
+index 2bbb220..f375157 100755
 --- a/libstdc++-v3/configure
 +++ b/libstdc++-v3/configure
 @@ -607,6 +607,7 @@ WARN_FLAGS
@@ -983,21 +952,18 @@ index 2bbb220..11a8a4d 100755
    if test $version_specific_libs = yes; then
      # Need the gcc compiler version to know where to install libraries
      # and header files if --enable-version-specific-runtime-libs option
-@@ -59112,7 +59114,12 @@ $as_echo "$version_specific_libs" >&6; }
+@@ -59109,6 +59111,10 @@ $as_echo "$version_specific_libs" >&6; }
+     else
+       glibcxx_toolexecdir='${libdir}/gcc/${host_alias}'
+       glibcxx_toolexeclibdir='${libdir}'
++      multi_os_directory=`$CXX -print-multi-directory`
++      if test x"$multi_os_directory" = x"."; then
++        glibcxx_dllbindir='$(bindir)'
++      fi
      fi
      multi_os_directory=`$CXX -print-multi-os-directory`
      case $multi_os_directory in
--      .) ;; # Avoid trailing /.
-+      .)
-+        if test -z "$with_cross_host" ||
-+           test x"$with_cross_host" = x"no"; then
-+          glibcxx_dllbindir='$(bindir)'
-+        fi
-+        ;; # Avoid trailing /.
-       *) glibcxx_toolexeclibdir=$glibcxx_toolexeclibdir/$multi_os_directory ;;
-     esac
-   fi
-@@ -59128,6 +59135,7 @@ $as_echo "$gxx_include_dir" >&6; }
+@@ -59128,6 +59134,7 @@ $as_echo "$gxx_include_dir" >&6; }
  
  
  
