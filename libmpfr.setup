@@ -33,7 +33,7 @@ function project_cleansource ()
 #   enable-thread-safe (what it sounds like)
 projectconfigflags="\
     --with-gmp=${EXECPREFIX} \
-    --enable-thred-safe"
+    --enable-thread-safe"
 
 # Do nothing
 function project_poststage ()
