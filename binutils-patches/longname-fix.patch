@@ -1,7 +1,7 @@
-From 38986fb8627240ff1263b1dd2bcf0ace450b81a8 Mon Sep 17 00:00:00 2001
+From 59bb4642e2a8e99c31794333fe5b37386ac5faf7 Mon Sep 17 00:00:00 2001
 From: Doug Semler <dougsemler@gmail.com>
 Date: Wed, 14 Apr 2010 09:22:58 -0400
-Subject: [PATCH 3/3] Fix PE-COFF archiving long name tables
+Subject: [PATCH 2/5] Fix PE-COFF archiving long name tables
 
 Fixes the PE-COFF archive long name tables by creating a new set of
 functions in the bfd library and using those functions when building
@@ -208,10 +208,10 @@ index 8083d97..7ae721f 100644
    BFD_JUMP_TABLE_RELOCS (coff),
    BFD_JUMP_TABLE_WRITE (coff),
 diff --git a/bfd/coffcode.h b/bfd/coffcode.h
-index 364daaa..c3cbb06 100644
+index 1cf2b4e..3759d91 100644
 --- a/bfd/coffcode.h
 +++ b/bfd/coffcode.h
-@@ -5631,6 +5631,10 @@ static bfd_coff_backend_data ticoff1_swap_table =
+@@ -5635,6 +5635,10 @@ static bfd_coff_backend_data ticoff1_swap_table =
  #define coff_bfd_define_common_symbol	    bfd_generic_define_common_symbol
  #endif
  
@@ -222,7 +222,7 @@ index 364daaa..c3cbb06 100644
  #define CREATE_BIG_COFF_TARGET_VEC(VAR, NAME, EXTRA_O_FLAGS, EXTRA_S_FLAGS, UNDER, ALTERNATIVE, SWAP_TABLE)	\
  const bfd_target VAR =							\
  {									\
-@@ -5778,3 +5782,155 @@ const bfd_target VAR =							\
+@@ -5782,3 +5786,155 @@ const bfd_target VAR =							\
  									\
    SWAP_TABLE								\
  };
@@ -379,7 +379,7 @@ index 364daaa..c3cbb06 100644
 +
 +#endif /* COFF_WITH_PE */
 diff --git a/bfd/libbfd-in.h b/bfd/libbfd-in.h
-index 89d0df6..d56d7d0 100644
+index 5e636a3..760ab69 100644
 --- a/bfd/libbfd-in.h
 +++ b/bfd/libbfd-in.h
 @@ -333,6 +333,29 @@ extern bfd_boolean _bfd_archive_coff_construct_extended_name_table
@@ -413,7 +413,7 @@ index 89d0df6..d56d7d0 100644
     archives.  Use BFD_JUMP_TABLE_ARCHIVE (_bfd_archive_bsd44).  */
  
 diff --git a/bfd/libbfd.h b/bfd/libbfd.h
-index c02063a..9fcbbae 100644
+index 7275dd9..a4b7f24 100644
 --- a/bfd/libbfd.h
 +++ b/bfd/libbfd.h
 @@ -338,6 +338,29 @@ extern bfd_boolean _bfd_archive_coff_construct_extended_name_table
