@@ -1,6 +1,6 @@
 From 59bb4642e2a8e99c31794333fe5b37386ac5faf7 Mon Sep 17 00:00:00 2001
 From: Doug Semler <dougsemler@gmail.com>
-Date: Wed, 14 Apr 2010 09:22:58 -0400
+Date: Mon, 24 Jul 2017 14:01:02 +0300
 Subject: [PATCH 2/5] Fix PE-COFF archiving long name tables
 
 Fixes the PE-COFF archive long name tables by creating a new set of
@@ -20,23 +20,23 @@ to be the normal COFF archive functions.
 	* coffcode.h: Likewise.
 	* pe-mips.c: Likewise.
 ---
- bfd/archive.c     |   28 ++++++++++
- bfd/coff-i386.c   |    6 ++-
- bfd/coff-ia64.c   |    6 ++-
- bfd/coff-ppc.c    |   10 +++-
- bfd/coff-sh.c     |   11 ++++-
- bfd/coff-x86_64.c |    4 ++
- bfd/coffcode.h    |  156 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- bfd/libbfd-in.h   |   23 ++++++++
- bfd/libbfd.h      |   23 ++++++++
- bfd/pe-mips.c     |    6 ++-
- 10 files changed, 268 insertions(+), 5 deletions(-)
+ bfd/archive.c     |  28 ++++++++++
+ bfd/coff-i386.c   |   4 ++
+ bfd/coff-ia64.c   |   4 ++
+ bfd/coff-ppc.c    |   8 +++
+ bfd/coff-sh.c     |   8 +++
+ bfd/coff-x86_64.c |   4 ++
+ bfd/coffcode.h    | 159 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ bfd/libbfd-in.h   |  23 ++++++++
+ bfd/libbfd.h      |  23 ++++++++
+ bfd/pe-mips.c     |   4 ++
+ 10 files changed, 265 insertions(+)
 
 diff --git a/bfd/archive.c b/bfd/archive.c
-index e6c1e83..a94c2c1 100644
+index f209bab..51386b9 100644
 --- a/bfd/archive.c
 +++ b/bfd/archive.c
-@@ -1580,6 +1580,34 @@ _bfd_archive_coff_construct_extended_nam
+@@ -1580,6 +1580,34 @@ _bfd_archive_coff_construct_extended_name_table (bfd *abfd,
    return _bfd_construct_extended_name_table (abfd, TRUE, tabloc, tablen);
  }
  
@@ -72,7 +72,7 @@ index e6c1e83..a94c2c1 100644
     necessary.  Returns (in tabloc) a pointer to an extended name
     table, and in tablen the length of the table.  If it makes an entry
 diff --git a/bfd/coff-i386.c b/bfd/coff-i386.c
-index 57c47d0..ee191b2 100644
+index b6ef597..878b209 100644
 --- a/bfd/coff-i386.c
 +++ b/bfd/coff-i386.c
 @@ -671,7 +671,11 @@ const bfd_target
@@ -88,7 +88,7 @@ index 57c47d0..ee191b2 100644
       BFD_JUMP_TABLE_RELOCS (coff),
       BFD_JUMP_TABLE_WRITE (coff),
 diff --git a/bfd/coff-ia64.c b/bfd/coff-ia64.c
-index 38d9ac6..d0c52ae 100644
+index fe27350..efce78b 100644
 --- a/bfd/coff-ia64.c
 +++ b/bfd/coff-ia64.c
 @@ -189,7 +189,11 @@ const bfd_target
@@ -104,7 +104,7 @@ index 38d9ac6..d0c52ae 100644
       BFD_JUMP_TABLE_RELOCS (coff),
       BFD_JUMP_TABLE_WRITE (coff),
 diff --git a/bfd/coff-ppc.c b/bfd/coff-ppc.c
-index 307b7c7..9245d1d 100644
+index 9dca30c..f2ef9c3 100644
 --- a/bfd/coff-ppc.c
 +++ b/bfd/coff-ppc.c
 @@ -2517,7 +2517,11 @@ const bfd_target TARGET_LITTLE_SYM =
@@ -132,10 +132,10 @@ index 307b7c7..9245d1d 100644
    BFD_JUMP_TABLE_RELOCS (coff),
    BFD_JUMP_TABLE_WRITE (coff),
 diff --git a/bfd/coff-sh.c b/bfd/coff-sh.c
-index 28ac0ab..93b4f6e 100644
+index 26d296b..6a62f83 100644
 --- a/bfd/coff-sh.c
 +++ b/bfd/coff-sh.c
-@@ -3153,7 +3153,11 @@ const bfd_target shcoff_small_vec =
+@@ -3156,7 +3156,11 @@ const bfd_target sh_coff_small_vec =
    BFD_JUMP_TABLE_GENERIC (coff_small),
    BFD_JUMP_TABLE_COPY (coff),
    BFD_JUMP_TABLE_CORE (_bfd_nocore),
@@ -147,7 +147,7 @@ index 28ac0ab..93b4f6e 100644
    BFD_JUMP_TABLE_SYMBOLS (coff),
    BFD_JUMP_TABLE_RELOCS (coff),
    BFD_JUMP_TABLE_WRITE (coff),
-@@ -3198,7 +3202,11 @@ const bfd_target shlcoff_small_vec =
+@@ -3201,7 +3205,11 @@ const bfd_target sh_coff_small_le_vec =
    BFD_JUMP_TABLE_GENERIC (coff_small),
    BFD_JUMP_TABLE_COPY (coff),
    BFD_JUMP_TABLE_CORE (_bfd_nocore),
@@ -160,7 +160,7 @@ index 28ac0ab..93b4f6e 100644
    BFD_JUMP_TABLE_RELOCS (coff),
    BFD_JUMP_TABLE_WRITE (coff),
 diff --git a/bfd/coff-x86_64.c b/bfd/coff-x86_64.c
-index 8083d97..7ae721f 100644
+index de22822..3b8c43a 100644
 --- a/bfd/coff-x86_64.c
 +++ b/bfd/coff-x86_64.c
 @@ -804,7 +804,11 @@ const bfd_target
@@ -176,11 +176,11 @@ index 8083d97..7ae721f 100644
    BFD_JUMP_TABLE_RELOCS (coff),
    BFD_JUMP_TABLE_WRITE (coff),
 diff --git a/bfd/coffcode.h b/bfd/coffcode.h
-index 1cf2b4e..3759d91 100644
+index 4aa9741..4f71ff6 100644
 --- a/bfd/coffcode.h
 +++ b/bfd/coffcode.h
-@@ -6049,6 +6049,10 @@ static bfd_coff_backend_data ticoff1_swa
- #define coff_bfd_define_common_symbol	    bfd_generic_define_common_symbol
+@@ -6064,6 +6064,10 @@ static bfd_coff_backend_data bigobj_swap_table =
+ #define coff_bfd_define_start_stop	    bfd_generic_define_start_stop
  #endif
  
 +/* Define the PE-COFF generators with the correct tables. */
@@ -190,7 +190,7 @@ index 1cf2b4e..3759d91 100644
  #define CREATE_BIG_COFF_TARGET_VEC(VAR, NAME, EXTRA_O_FLAGS, EXTRA_S_FLAGS, UNDER, ALTERNATIVE, SWAP_TABLE)	\
  const bfd_target VAR =							\
  {									\
-@@ -6199,3 +6203,158 @@ const bfd_target VAR =							\
+@@ -6214,3 +6218,158 @@ const bfd_target VAR =							\
  									\
    SWAP_TABLE								\
  };
@@ -350,10 +350,10 @@ index 1cf2b4e..3759d91 100644
 +
 +#endif /* COFF_WITH_PE */
 diff --git a/bfd/libbfd-in.h b/bfd/libbfd-in.h
-index 5e636a3..760ab69 100644
+index 7adee99..cbdef8c 100644
 --- a/bfd/libbfd-in.h
 +++ b/bfd/libbfd-in.h
-@@ -351,6 +351,29 @@ extern bfd_boolean _bfd_archive_coff_con
+@@ -351,6 +351,29 @@ extern bfd_boolean _bfd_archive_coff_construct_extended_name_table
    bfd_generic_stat_arch_elt
  #define _bfd_archive_coff_update_armap_timestamp bfd_true
  
@@ -384,10 +384,10 @@ index 5e636a3..760ab69 100644
     archives.  Use BFD_JUMP_TABLE_ARCHIVE (_bfd_archive_bsd44).  */
  
 diff --git a/bfd/libbfd.h b/bfd/libbfd.h
-index 7275dd9..a4b7f24 100644
+index ae9bf76..334da52 100644
 --- a/bfd/libbfd.h
 +++ b/bfd/libbfd.h
-@@ -356,6 +356,29 @@ extern bfd_boolean _bfd_archive_coff_con
+@@ -356,6 +356,29 @@ extern bfd_boolean _bfd_archive_coff_construct_extended_name_table
    bfd_generic_stat_arch_elt
  #define _bfd_archive_coff_update_armap_timestamp bfd_true
  
@@ -418,7 +418,7 @@ index 7275dd9..a4b7f24 100644
     archives.  Use BFD_JUMP_TABLE_ARCHIVE (_bfd_archive_bsd44).  */
  
 diff --git a/bfd/pe-mips.c b/bfd/pe-mips.c
-index 31b87f4..e1b5bd6 100644
+index d746a44..f083433 100644
 --- a/bfd/pe-mips.c
 +++ b/bfd/pe-mips.c
 @@ -911,7 +911,11 @@ const bfd_target
@@ -434,5 +434,5 @@ index 31b87f4..e1b5bd6 100644
    BFD_JUMP_TABLE_RELOCS (coff),
    BFD_JUMP_TABLE_WRITE (coff),
 -- 
-1.7.0.3.254.g4503b
+1.8.5.5
 
